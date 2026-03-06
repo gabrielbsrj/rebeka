@@ -800,6 +800,35 @@ class UncertaintyAnnotation(Base):
     merkle_leaf_hash = Column(String, nullable=False)
 
 
+# =============================================================================
+# COMUNICAÇÃO EXTERNA — Email e Financeiro (v6.0)
+# =============================================================================
+
+class FinancialAlert(Base):
+    """
+    Alertas financeiros extraídos do EmailManager.
+    
+    INTENÇÃO: Nunca pagar. Apenas armazenar para o Radar Financeiro avisar o usuário.
+    """
+    __tablename__ = "financial_alerts"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    email_id = Column(String, nullable=False)
+    creditor = Column(String, nullable=False)
+    valor = Column(Float, nullable=False)
+    vencimento = Column(DateTime, nullable=False)
+    banco = Column(String, nullable=False)
+    tipo = Column(String, nullable=False)  # boleto, cartão, etc.
+    status = Column(String, nullable=False, default="pendente")
+    alerta_enviado = Column(Boolean, nullable=False, default=False)
+    pago = Column(Boolean, nullable=False, default=False)
+    
+    __table_args__ = (
+        Index("ix_financial_alerts_status_venc", "status", "vencimento"),
+    )
+
+
 class InteractionQuality(Base):
     """
     Qualidade de interação avaliada pelo usuário.

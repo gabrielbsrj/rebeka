@@ -63,6 +63,17 @@ Finanças oferecem métricas claras (taxa de acerto, ROI, drawdowns) para calibr
 | `browser_adapter.py` | Navegação | Extração de mensagens |
 | `whatsapp_local_adapter.py` | Envio | OCR/Vision |
 
+#### ✨ Novidades v6.0 (Expansão de Poderes)
+
+| Módulo | Status | Descrição |
+|--------|--------|-----------|
+| `system_conflict_checker.py` | ✅ NOVO | Auditoria de portas e banco de dados |
+| `email_manager.py` | ✅ NOVO | Hub conversor de recebimento de e-mails |
+| `financial_radar.py` | ✅ NOVO | Monitor proativo de contas a pagar |
+| `opportunity_detector.py` | ✅ NOVO | Cruzamento de eventos globais com Polymarket |
+| `whatsapp_responder.py` | ✅ NOVO | Assistente pessoal / Secretária virtual |
+| `memory_core.py` | ✅ NOVO | Ingestão de padrões e Morning Briefing |
+
 #### 📋 Placeholders Restantes (5)
 
 1. `browser_adapter.py` — Extração de mensagens via seletores
@@ -237,12 +248,16 @@ The financial domain is the **training ground** — not the destination.
 | `desktop.py` | 18 PyAutoGUI functions |
 | `executor_local.py` | 15+ automation tools |
 
-####6.0 New 🟡 v Features (2026)
+#### ✨ 6.0 New Features (Expansion of Powers)
 
 | Feature | Status | Description |
 |---------|--------|-------------|
 | `system_conflict_checker.py` | ✅ NEW | Audits system conflicts (ports, APIs, databases) |
 | `email_manager.py` | ✅ NEW | Email classification, spam cleaning, financial alerts |
+| `financial_radar.py` | ✅ NEW | Proactive monitor for upcoming bills |
+| `opportunity_detector.py` | ✅ NEW | Matches global events with Polymarket ops |
+| `whatsapp_responder.py` | ✅ NEW | Virtual assistant & auto-response protocol |
+| `memory_core.py` | ✅ NEW | Memory ingestion and Morning Briefing routine |
 | `onboarding_manager.py` | ✅ NEW | Secure first-run setup without hardcoded data |
 | `setup.bat` | ✅ NEW | Interactive Windows setup script |
 | `.gitignore` | ✅ NEW | Security - credentials never committed |
