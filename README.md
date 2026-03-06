@@ -247,6 +247,17 @@ The financial domain training ground infrastructure (Phases 1 to 5) is **100% co
 | `desktop.py` | 18 PyAutoGUI functions |
 | `executor_local.py` | 15+ automation tools |
 
+#### 🟡 Partial Modules (6/20)
+
+| Module | Implemented | Pending |
+|--------|--------------|----------|
+| `orchestrator.py` | Sense-think-act loop | Inconsistent API |
+| `rule_proposer.py` | Rule analysis | Evidence collection, YAML parser |
+| `privacy_auditor.py` | Egress audit | Bank search |
+| `selective_forgetter.py` | Structure | SMT Anonymization |
+| `browser_adapter.py` | Navigation | Message extraction |
+| `whatsapp_local_adapter.py` | Sending | OCR/Vision |
+
 #### ✨ 6.0 New Features (Expansion of Powers)
 
 | Feature | Status | Description |
@@ -332,6 +343,16 @@ Planner uses `vault://id`. Executor resolves at the last millisecond.
 
 ---
 
+### 🔒 Security
+
+- **93 tested invariants**
+- **Evolution Sandbox** — code runs through an isolated container
+- **Privacy Auditor** — all data is audited before egress
+- **Sparse Merkle Tree** — integrity + selective forgetting
+- **security_phase1.yaml** — restrictions with evolution conditions
+
+---
+
 ### 📁 Project Structure
 
 ```
@@ -352,5 +373,21 @@ agent/
 ```
 
 ---
+
+### 🗺️ Roadmap
+
+```
+Phase 1 — Learn to See         ██████████ 100%
+Phase 2 — Learn to Understand  ██████████ 100%
+Phase 3 — Learn to Synthesize  ██████████ 100%
+Phase 4 — Learn to Question    ██████████ 100%
+Phase 5 — Learn the Scope      ██████████ 100%
+Phase 6 — Expansion of Powers  █████░░░░░  50%  ← you are here
+```
+
+**Next steps:**
+1. Couple the v6 modules to the Orchestrator
+2. Refine WhatsApp automations
+3. Evaluate impact on the System Conflict Checker
 
 **Welcome to the era of Autonomous Intelligence.**
