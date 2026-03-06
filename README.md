@@ -3,8 +3,10 @@
 
 ![Status: Phase 1 ~92%](https://img.shields.io/badge/Phase_1-92%25_Complete-brightgreen)
 ![Tests: 93/93](https://img.shields.io/badge/Tests-93%2F93_Passing-brightgreen)
+![Modules: 14/20](https://img.shields.io/badge/Modules-14%2F20-70%25-blue)
 ![Architecture: Dual Twins](https://img.shields.io/badge/Architecture-Dual_Twins-blue)
 ![Memory: Causal Bank + SMT](https://img.shields.io/badge/Memory-Causal_Bank_SMT-orange)
+![Version: 6.0](https://img.shields.io/badge/Version-6.0-orange)
 
 [🇧🇷 Versão em Português](#versão-em-português) | [🇺🇸 English Version](#english-version)
 
