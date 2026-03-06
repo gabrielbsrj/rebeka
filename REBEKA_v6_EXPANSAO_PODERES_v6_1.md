@@ -906,3 +906,261 @@ CONFLICT_CHECK_ON_STARTUP=true     # Auditoria de conflitos ao iniciar
 ---
 *Documento gerado por análise de AGENT_PROJECT_PROMPT_v5.md*
 *Versão: 6.0-DRAFT | 2026-03-06*
+
+
+---
+
+# EXPANSÃO ARQUITETURAL — MÓDULOS AVANÇADOS (v6.1)
+
+Os módulos abaixo elevam a Rebeka de um **assistente automatizado** para um **sistema cognitivo adaptativo**.
+
+Eles introduzem:
+
+- priorização cognitiva
+- aprendizado contínuo
+- pesquisa autônoma
+- auto‑recuperação do sistema
+- planejamento estratégico
+
+---
+
+# MÓDULO 6: DECISION ENGINE (Cérebro de Prioridades)
+
+Responsável por decidir **o que a Rebeka deve fazer primeiro** quando múltiplos eventos ocorrem.
+
+Sem esse módulo, o sistema pode reagir de forma caótica quando várias entradas chegam ao mesmo tempo.
+
+## Arquitetura
+
+Inputs
+↓
+Decision Engine
+↓
+Priority Queue
+↓
+Action Executor
+
+## Exemplo de implementação
+
+```python
+class DecisionEngine:
+
+    def evaluate_event(self, event):
+
+        score = 0
+
+        score += event.financial_impact * 3
+        score += event.urgency * 2
+        score += event.user_relevance * 5
+        score += event.confidence * 2
+
+        return score
+```
+
+Eventos com maior pontuação entram primeiro na fila de execução.
+
+---
+
+# MÓDULO 7: LEARNING LOOP (Aprendizado Contínuo)
+
+Permite que Rebeka **aprenda com erros e acertos**.
+
+Fluxo:
+
+Prediction
+↓
+Outcome
+↓
+Error
+↓
+Model Update
+
+## Exemplo
+
+Evento detectado:
+
+Conflito geopolítico → previsão: petróleo sobe.
+
+Após 7 dias:
+
+Preço real comparado com previsão.
+
+Sistema registra erro e ajusta heurísticas futuras.
+
+```python
+class PredictionMemory:
+
+    def record_prediction(self, prediction):
+        db.save({
+            "prediction": prediction,
+            "timestamp": now()
+        })
+
+    def evaluate_prediction(self, outcome):
+
+        error = outcome - prediction.value
+
+        self.update_model(error)
+```
+
+Isso permite que o sistema **melhore previsões ao longo do tempo**.
+
+---
+
+# MÓDULO 8: AUTONOMOUS RESEARCH ENGINE
+
+Motor de pesquisa autônoma.
+
+Quando Rebeka detecta um problema recorrente do usuário, ela inicia pesquisa automática.
+
+Fluxo:
+
+Problema detectado
+↓
+IA gera perguntas
+↓
+Pesquisa fontes
+↓
+Gera hipóteses
+↓
+Testa hipóteses
+↓
+Entrega relatório ao usuário
+
+Exemplo:
+
+Problema identificado:
+fluxo de caixa negativo.
+
+Rebeka pesquisa:
+
+- estratégias de aumento de receita
+- automações
+- oportunidades de negócio
+
+---
+
+# MÓDULO 9: SYSTEM SELF‑HEALING
+
+Monitor de saúde do sistema.
+
+Detecta falhas e tenta corrigi‑las automaticamente.
+
+Problemas monitorados:
+
+- containers Docker parados
+- APIs desconectadas
+- scripts travados
+- consumo excessivo de memória
+
+## Implementação
+
+```python
+class SystemHealthMonitor:
+
+    def check_services(self):
+
+        services = [
+            "email_manager",
+            "whatsapp_responder",
+            "opportunity_detector"
+        ]
+
+        for service in services:
+
+            if not self.is_running(service):
+                self.restart(service)
+                self.notify_user(service)
+```
+
+Objetivo:
+
+Garantir que Rebeka continue operando **24h sem intervenção manual**.
+
+---
+
+# MÓDULO 10: STRATEGIC PLANNING ENGINE
+
+Motor de planejamento estratégico.
+
+Transforma metas do usuário em **planos executáveis**.
+
+Fluxo:
+
+Meta
+↓
+Decomposição
+↓
+Tarefas
+↓
+Prioridades
+↓
+Execução assistida
+
+Exemplo:
+
+Meta:
+renda mensal de 30k.
+
+Plano gerado:
+
+1. criar produto digital
+2. automatizar vendas
+3. otimizar estratégias de trading
+4. reduzir custos operacionais
+
+```python
+class StrategicPlanner:
+
+    def create_plan(self, goal):
+
+        steps = self.break_goal(goal)
+
+        tasks = []
+
+        for step in steps:
+            tasks.extend(self.generate_tasks(step))
+
+        return tasks
+```
+
+---
+
+# ARQUITETURA FINAL EXPANDIDA
+
+FONTES DE DADOS
+↓
+Sensores (Email / WhatsApp / Monitores / APIs)
+↓
+Processamento (Classificadores / Detectores)
+↓
+Memory Core (PostgreSQL)
+↓
+Decision Engine
+↓
+Orchestration Engine
+↓
+Executores de Ação
+↓
+Alertas / Sugestões / Automação
+
+Módulos Transversais:
+
+- Learning Loop
+- Autonomous Research
+- System Self‑Healing
+- Strategic Planner
+
+---
+
+# PRINCÍPIO OPERACIONAL v6.1
+
+Rebeka deixa de ser apenas um assistente reativo.
+
+Ela passa a ser um **sistema cognitivo contínuo**, capaz de:
+
+- priorizar eventos
+- aprender com decisões
+- pesquisar soluções
+- reparar falhas
+- planejar estratégias de longo prazo
