@@ -2,7 +2,7 @@
 *Autonomous Intelligence & Personal Coherence Agent*
 
 ![Status: Phase 1 ~92%](https://img.shields.io/badge/Phase_1-92%25_Complete-brightgreen)
-![Tests: 93/93](https://img.shields.io/badge/Tests-93%2F93_Passing-brightgreen)
+![Tests: 243/243](https://img.shields.io/badge/Tests-243%2F243_Passing-brightgreen)
 ![Modules: 14/20](https://img.shields.io/badge/Modules-14%2F20-70%25-blue)
 ![Architecture: Dual Twins](https://img.shields.io/badge/Architecture-Dual_Twins-blue)
 ![Memory: Causal Bank + SMT](https://img.shields.io/badge/Memory-Causal_Bank_SMT-orange)
