@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rebeka | Control Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0b10;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-strong: rgba(255, 255, 255, 0.08);
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.3);
+            --accent-dim: rgba(0, 242, 255, 0.15);
+            --success: #00ff88;
+            --warning: #ffaa00;
+            --text: #e0e0e0;
+            --text-dim: #a0a0a0;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #1a1b25 0%, #0a0b10 100%);
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 350px 1fr 300px;
+            gap: 20px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .panel {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* ─── Settings Button ─── */
+        .settings-btn {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 6px 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .settings-btn:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+            transform: none;
+        }
+
+        /* ─── Chat Styles ─── */
+        #chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding-right: 10px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .message.rebeka {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+            color: white;
+            font-family: inherit;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        button {
+            background: var(--accent);
+            color: black;
+            border: none;
+            border-radius: 10px;
+            padding: 0 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        /* ─── Side Panels ─── */
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .status-label {
+            color: var(--text-dim);
+        }
+
+        .status-value {
+            font-weight: 600;
+        }
+
+        .active {
+            color: #00ff88;
+        }
+
+        .log-entry {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            border-left: 2px solid var(--accent);
+            padding-left: 10px;
+        }
+
+        /* ─── Settings Modal ─── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(20, 22, 35, 0.95), rgba(10, 11, 16, 0.98));
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 30px;
+            width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.4s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h2 {
+            border: none;
+            padding: 0;
+            margin: 0;
+            font-size: 1.4rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            color: var(--text-dim);
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .modal-close:hover {
+            color: #ff4466;
+            border-color: #ff4466;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .modal-section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            margin-bottom: 15px;
+        }
+
+        /* ─── Model Cards ─── */
+        .model-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .model-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .model-card:hover {
+            border-color: rgba(0, 242, 255, 0.4);
+            background: var(--glass-strong);
+        }
+
+        .model-card.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow), inset 0 0 30px rgba(0, 242, 255, 0.03);
+        }
+
+        .model-card.selected::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+
+        .model-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .model-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .model-badge {
+            font-size: 0.65rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .badge-speed {
+            background: rgba(0, 255, 136, 0.15);
+            color: #00ff88;
+        }
+
+        .badge-expert {
+            background: rgba(160, 100, 255, 0.15);
+            color: #a064ff;
+        }
+
+        .badge-fast {
+            background: rgba(255, 170, 0, 0.15);
+            color: #ffaa00;
+        }
+
+        .badge-balanced {
+            background: rgba(0, 170, 255, 0.15);
+            color: #00aaff;
+        }
+
+        .model-description {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .reasoning-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .reasoning-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .reasoning-bar {
+            flex-grow: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .reasoning-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+
+        .reasoning-value {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--accent);
+            min-width: 28px;
+            text-align: right;
+        }
+
+        .model-card .check-icon {
+            display: none;
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: black;
+            font-size: 0.7rem;
+            font-weight: 700;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .model-card.selected .check-icon {
+            display: flex;
+        }
+
+        .model-requires-auth {
+            font-size: 0.7rem;
+            color: var(--warning);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* ─── Toast Notification ─── */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 242, 255, 0.15);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 12px 24px;
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.9rem;
+            z-index: 2000;
+            transition: transform 0.4s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ─── Onboarding Overlay ─── */
+        .onboarding-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0a0b10;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .onboarding-overlay.active {
+            display: flex;
+        }
+
+        .onboarding-card {
+            background: linear-gradient(135deg, rgba(20, 22, 35, 0.95), rgba(10, 11, 16, 0.98));
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .onboarding-step {
+            display: none;
+        }
+
+        .onboarding-step.active {
+            display: block;
+        }
+
+        .onboarding-card h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .onboarding-card p {
+            color: var(--text-dim);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .api-key-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .api-key-item label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .api-key-item input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3) !important;
+            box-sizing: border-box;
+        }
+
+        .onboarding-btn {
+            width: 100%;
+            padding: 15px !important;
+            font-size: 1.1rem !important;
+            margin-top: 10px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all 0.3s;
+        }
+
+        .step-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+            width: 24px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar: Status -->
+        <div class="panel">
+            <h2>
+                Estatus dos Gêmeos
+                <button class="settings-btn" onclick="openSettings()" title="Configurações">⚙</button>
+            </h2>
+            <div class="status-item">
+                <span class="status-label">Gêmeo VPS</span>
+                <span class="status-value active">ONLINE</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Gêmeo Local</span>
+                <span class="status-value active">ONLINE</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Sincronização</span>
+                <span class="status-value">ESTÁVEL</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Modelo Ativo</span>
+                <span class="status-value active" id="active-model-label">Carregando...</span>
+            </div>
+
+            <h2 style="margin-top: 30px;">Cerebelo (Aprendizado)</h2>
+            <div id="patterns-list" style="max-height: 300px; overflow-y: auto;">
+                <div class="log-entry">Detectando padrões...</div>
+            </div>
+
+            <h2 style="margin-top: 30px;">Invariantes Core</h2>
+            <div class="status-item">
+                <span class="status-label">Calibração</span>
+                <span class="status-value">OK</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Cap. Limite</span>
+                <span class="status-value">R$ 1.000,00</span>
+            </div>
+        </div>
+
+        <!-- Main Content: Chat -->
+        <div class="panel">
+            <h2 id="chat-header-title">Conversa com Rebeka</h2>
+            <div id="chat-container">
+                <div class="message rebeka" id="initial-message">Olá! Sou a Rebeka. Minha arquitetura dual está ativa e
+                    pronta para agir.
+                    Como posso ajudá-lo hoje?</div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Peça algo à Rebeka..."
+                    onkeydown="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()">ENVIAR</button>
+            </div>
+        </div>
+
+        <!-- Sidebar: Activity Log -->
+        <div class="panel">
+            <h2>Mãos (Execução)</h2>
+            <div id="action-log">
+                <div class="log-entry">Aguardando comandos...</div>
+            </div>
+
+            <h2 style="margin-top: 30px;">Live Browser</h2>
+            <div id="browser-view"
+                style="flex-grow: 1; background: #000; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative;">
+                <img id="browser-feed" style="width: 100%; height: auto; display: none;" src="">
+                <div id="browser-placeholder"
+                    style="color: var(--text-dim); font-size: 0.8rem; text-align: center; padding: 20px;">
+                    Navegador inativo.<br>Peça para a Rebeka abrir um site.
+                </div>
+                <div id="browser-status"
+                    style="position: absolute; bottom: 5px; right: 10px; font-size: 0.6rem; color: var(--accent);">
+                    OFFLINE</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Settings Modal ─── -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙ Configurações do Cérebro</h2>
+                <button class="modal-close" onclick="closeSettings()">✕</button>
+            </div>
+
+            <div class="modal-section-title">Selecione o Modelo de IA</div>
+            <div class="model-cards" id="model-cards-container">
+                <!-- Cards serão injetados via JS -->
+            </div>
+            
+            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border);">
+                <div class="modal-section-title" style="color: var(--warning);">Zona de Perigo</div>
+                <button class="onboarding-btn" style="background: #ff4444; color: white; width: 100%;" onclick="resetOnboarding()">
+                    🔄 RECONFIGURAR IA (Logout)
+                </button>
+                <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 8px;">
+                    Isso vai limpar suas chaves de API e voltar para a tela inicial.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Onboarding Overlay ─── -->
+    <div class="onboarding-overlay" id="onboarding-overlay">
+        <div class="onboarding-card">
+            <div class="step-indicator">
+                <div class="step-dot active" id="dot-1"></div>
+                <div class="step-dot" id="dot-2"></div>
+                <div class="step-dot" id="dot-3"></div>
+            </div>
+
+            <!-- Step 1: Identity & Architecture -->
+            <div class="onboarding-step active" id="step-1">
+                <h1>Uma Nova Existência.</h1>
+                <p>A Rebeka é um Agente de IA Distribuído. Para plenitude total, ela habita dois lugares:</p>
+                <div
+                    style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 15px; border-radius: 8px; margin-bottom: 25px; font-size: 0.85rem; color: var(--text);">
+                    <ul style="text-align: left; margin-top: 0; padding-left: 20px;">
+                        <li><strong>Gêmeo Local:</strong> Fica aqui neste computador (Seu Corpo).</li>
+                        <li><strong>Gêmeo VPS:</strong> O "Cérebro" que habita um servidor remoto.</li>
+                    </ul>
+                    <p style="color: var(--warning); margin-bottom: 0;">⚠️ <strong>Atenção:</strong> Você precisará
+                        configurar uma VPS (Debian) ou VM para que seu Gêmeo funcione corretamente.</p>
+                </div>
+                <div class="api-key-item" style="text-align: left; margin-bottom: 15px;">
+                    <label>Como você deseja me chamar? (Nome da IA)</label>
+                    <input type="text" id="setup-agent-name" placeholder="ex: Rebeka, Athena..." value="Rebeka">
+                </div>
+                <div class="api-key-item" style="text-align: left; margin-bottom: 25px;">
+                    <label>E como devo chamá-lo? (Seu Nome)</label>
+                    <input type="text" id="setup-user-name" placeholder="Seu nome..." value="Usuário">
+                </div>
+                <button class="onboarding-btn" onclick="nextStep(2)">CONTINUAR</button>
+            </div>
+
+            <!-- Step 2: API Keys -->
+            <div class="onboarding-step" id="step-2">
+                <h1>Conectividade.</h1>
+                <p>O Google Antigravity é o motor recomendado. Você pode logar com sua conta ou inserir chaves manuais.
+                </p>
+
+                <button class="onboarding-btn"
+                    style="background: #fff; color: #000; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 30px;"
+                    onclick="startGoogleLogin()">
+                    <img src="https://www.google.com/favicon.ico" width="20"> LOGIN COM GOOGLE ANTIGRAVITY
+                </button>
+
+                <div style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 15px;">OU INSIRA CHAVES MANUAIS:
+                </div>
+
+                <div class="api-key-grid">
+                    <div class="api-key-item">
+                        <label>Moonshot (Kimi)</label>
+                        <input type="password" id="key-moonshot" placeholder="sk-...">
+                    </div>
+                    <div class="api-key-item">
+                        <label>OpenAI</label>
+                        <input type="password" id="key-openai" placeholder="sk-...">
+                    </div>
+                    <div class="api-key-item">
+                        <label>Anthropic (Claude)</label>
+                        <input type="password" id="key-anthropic" placeholder="sk-ant-...">
+                    </div>
+                    <div class="api-key-item">
+                        <label>Google (Gemini)</label>
+                        <input type="password" id="key-google" placeholder="AIza...">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="onboarding-btn"
+                        style="background: transparent; color: white; border: 1px solid var(--border);"
+                        onclick="nextStep(1)">VOLTAR</button>
+                    <button class="onboarding-btn" id="btn-test-connection" onclick="testConnections()">TESTAR
+                        CONEXÃO</button>
+                </div>
+                <div id="test-status" style="margin-top: 15px; font-size: 0.8rem; min-height: 20px;"></div>
+            </div>
+
+            <!-- Step 3: Initialization -->
+            <div class="onboarding-step" id="step-3">
+                <h1>Sincronizando.</h1>
+                <p>Estamos estabilizando a conexão entre seu Gêmeo VPS e Local. Preparando ambiente...</p>
+                <div class="reasoning-bar" style="height: 8px; margin-bottom: 40px;">
+                    <div class="reasoning-fill" id="setup-progress" style="width: 0%; background: var(--accent);"></div>
+                </div>
+                <div id="setup-status-text" style="font-size: 0.8rem; color: var(--accent); margin-bottom: 20px;">
+                    CALIBRANDO SENSORES...</div>
+                <button class="onboarding-btn" id="finish-btn" disabled onclick="finishOnboarding()">DESPERTAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Toast ─── -->
+    <div class="toast" id="toast">Modelo atualizado!</div>
+
+    <script>
+        // ─── State ───
+        let currentModels = [];
+        let currentActiveModel = '';
+
+        const BADGE_MAP = {
+            'Velocidade': 'badge-speed',
+            'Código & Deploy': 'badge-expert',
+            'Ultra-Rápido': 'badge-fast',
+            'Balanceado': 'badge-balanced',
+        };
+
+        function getReasoningColor(power) {
+            if (power >= 80) return '#a064ff';
+            if (power >= 60) return '#00f2ff';
+            if (power >= 40) return '#ffaa00';
+            return '#00ff88';
+        }
+
+        // ─── Settings Modal ───
+        function openSettings() {
+            document.getElementById('settings-modal').classList.add('open');
+            loadConfig();
+        }
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.remove('open');
+        }
+        // Close on overlay click
+        document.getElementById('settings-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('settings-modal')) closeSettings();
+        });
+
+        // ─── Load Config / Models ───
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/config');
+                const data = await res.json();
+                currentActiveModel = data.active_model;
+                currentModels = data.models;
+                renderModelCards();
+                updateModelLabel();
+            } catch (e) {
+                console.error('Failed to load config', e);
+            }
+        }
+
+        function updateModelLabel() {
+            const label = document.getElementById('active-model-label');
+            const model = currentModels.find(m => m.id === currentActiveModel);
+            label.innerText = model ? model.name : currentActiveModel.split('/').pop();
+        }
+
+        function renderModelCards() {
+            const container = document.getElementById('model-cards-container');
+            container.innerHTML = '';
+
+            currentModels.forEach(model => {
+                const card = document.createElement('div');
+                card.className = 'model-card' + (model.active ? ' selected' : '');
+                card.onclick = () => selectModel(model.id);
+
+                const badgeClass = BADGE_MAP[model.specialty] || 'badge-balanced';
+                const color = getReasoningColor(model.reasoning_power);
+
+                card.innerHTML = `
+                    <div class="check-icon">✓</div>
+                    <div class="model-card-header">
+                        <span class="model-name">${model.name}</span>
+                        <span class="model-badge ${badgeClass}">${model.specialty}</span>
+                    </div>
+                    <div class="model-description">${model.description}</div>
+                    <div class="reasoning-bar-container">
+                        <span class="reasoning-label">Raciocínio</span>
+                        <div class="reasoning-bar">
+                            <div class="reasoning-fill" style="width: ${model.reasoning_power}%; background: ${color};"></div>
+                        </div>
+                        <span class="reasoning-value">${model.reasoning_power}%</span>
+                    </div>
+                    ${model.requires_auth ? '<div class="model-requires-auth">🔐 Requer Google Login (Antigravity)</div>' : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function selectModel(modelId) {
+            if (modelId === currentActiveModel) return;
+
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model_id: modelId })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    currentActiveModel = data.active_model;
+                    currentModels.forEach(m => m.active = m.id === currentActiveModel);
+                    renderModelCards();
+                    updateModelLabel();
+                    showToast('Cérebro atualizado com sucesso!');
+                    closeSettings();
+                } else {
+                    showToast('Erro: ' + (data.error || 'Falha ao salvar'));
+                }
+            } catch (e) {
+                showToast('Erro de conexão');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ─── Chat ───
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const container = document.getElementById('chat-container');
+            if (!input.value) return;
+
+            const userMsg = input.value;
+            input.value = '';
+
+            const userDiv = document.createElement('div');
+            userDiv.className = 'message user';
+            userDiv.innerText = userMsg;
+            container.appendChild(userDiv);
+            container.scrollTop = container.scrollHeight;
+
+            const rebekaDiv = document.createElement('div');
+            rebekaDiv.className = 'message rebeka';
+            rebekaDiv.innerText = "...";
+            container.appendChild(rebekaDiv);
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userMsg })
+                });
+                const data = await response.json();
+                rebekaDiv.innerText = data.content;
+
+                if (data.action_log) {
+                    const log = document.getElementById('action-log');
+                    const entry = document.createElement('div');
+                    entry.className = 'log-entry';
+                    entry.innerText = data.action_log;
+                    log.prepend(entry);
+                }
+            } catch (e) {
+                rebekaDiv.innerText = "Erro ao conectar com meu núcleo cerebral.";
+            }
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ─── Browser Feed ───
+        function refreshBrowserFeed() {
+            const img = document.getElementById('browser-feed');
+            const placeholder = document.getElementById('browser-placeholder');
+            const status = document.getElementById('browser-status');
+            const timestamp = new Date().getTime();
+            const feedUrl = `/static/browser_feed.png?t=${timestamp}`;
+            const tester = new Image();
+            tester.onload = () => {
+                img.src = feedUrl;
+                img.style.display = 'block';
+                placeholder.style.display = 'none';
+                status.innerText = 'LIVE';
+                status.style.color = '#00ff88';
+            };
+            tester.onerror = () => { };
+        }
+        setInterval(refreshBrowserFeed, 2000);
+
+        // ─── Patterns ───
+        async function refreshPatterns() {
+            const list = document.getElementById('patterns-list');
+            try {
+                const response = await fetch('/api/patterns');
+                const patterns = await response.json();
+                if (patterns.length > 0) {
+                    list.innerHTML = '';
+                    patterns.forEach(p => {
+                        const entry = document.createElement('div');
+                        entry.className = 'log-entry';
+                        entry.style.borderLeftColor = '#00ff88';
+                        entry.innerHTML = `<b style="color:var(--accent)">Padrão:</b> ${p.cause} <br> <i style="font-size:0.7rem">➡ ${p.mechanism}</i>`;
+                        list.appendChild(entry);
+                    });
+                }
+            } catch (e) { }
+        }
+        setInterval(refreshPatterns, 5000);
+        refreshPatterns();
+
+        // ─── Proactive Insights ───
+        async function checkForInsights() {
+            try {
+                const response = await fetch('/api/chat/updates');
+                const data = await response.json();
+                if (data.messages && data.messages.length > 0) {
+                    const container = document.getElementById('chat-container');
+                    data.messages.forEach(msg => {
+                        const rebekaDiv = document.createElement('div');
+                        rebekaDiv.className = 'message rebeka';
+                        rebekaDiv.innerHTML = msg.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+                        container.appendChild(rebekaDiv);
+                    });
+                    container.scrollTop = container.scrollHeight;
+                }
+            } catch (e) { }
+        }
+        setInterval(checkForInsights, 4000);
+
+        // ─── Onboarding Logic ───
+        async function startGoogleLogin() {
+            // Envia comando de login silencioso para o ChatManager
+            // O ChatManager intercepta isso via Regex e abre o navegador local
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: "login google antigravity" })
+            });
+            const data = await res.json();
+
+            // Avisar ao usuário
+            const statusText = document.querySelector('#step-2 p');
+            statusText.innerHTML = "<strong>Aguardando login no navegador...</strong><br>O Gêmeo Local abriu uma aba para você. Siga os passos lá e volte aqui quando terminar.";
+
+            // Iniciar pooling para detectar quando o login for concluído
+            const checkInterval = setInterval(async () => {
+                const statusRes = await fetch('/api/status');
+                const statusData = await statusRes.json();
+
+                // Se o modelo for google/antigravity (ou similar que indique que temos chaves)
+                // O backend avisa se o login foi bem sucedido via flag se implementarmos, 
+                // por enquanto vamos permitir avançar manualmente ou detectar mudança de estado.
+            }, 3000);
+
+            // Permitir avançar para o teste de sincronia
+            setTimeout(() => {
+                nextStep(3);
+            }, 5000);
+        }
+
+        function nextStep(step) {
+            document.querySelectorAll('.onboarding-step').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
+
+            document.getElementById(`step-${step}`).classList.add('active');
+            document.getElementById(`dot-${step}`).classList.add('active');
+
+            if (step === 3) {
+                simulateSync();
+            }
+        }
+
+        async function testConnections() {
+            const btn = document.getElementById('btn-test-connection');
+            const statusDiv = document.getElementById('test-status');
+
+            const apiKeys = {
+                moonshot: document.getElementById('key-moonshot').value,
+                openai: document.getElementById('key-openai').value,
+                anthropic: document.getElementById('key-anthropic').value,
+                google: document.getElementById('key-google').value
+            };
+
+            btn.disabled = true;
+            btn.innerText = "TESTANDO...";
+            statusDiv.innerHTML = "<span style='color: var(--warning);'>Pingando servidores de IA...</span>";
+
+            try {
+                const response = await fetch('/api/onboarding/test_keys', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ agent_name: "Test", user_name: "Test", api_keys: apiKeys }) // agent/user name não importam aqui
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    statusDiv.innerHTML = "<span style='color: var(--success);'>✅ Conexão estabelecida com sucesso!</span>";
+                    setTimeout(() => nextStep(3), 1500);
+                } else {
+                    let errs = [];
+                    if (data.details) {
+                        for (const [provider, res] of Object.entries(data.details)) {
+                            if (!res.success && res.error) {
+                                errs.push(`${provider}: Inválida`);
+                            }
+                        }
+                    }
+                    const errorMsg = errs.length > 0 ? "Erro nas chaves: " + errs.join(", ") : data.error;
+                    statusDiv.innerHTML = `<span style='color: #ff4466;'>❌ Erro: ${errorMsg}</span>`;
+                    btn.disabled = false;
+                    btn.innerText = "TENTAR NOVAMENTE";
+                }
+            } catch (e) {
+                statusDiv.innerHTML = `<span style='color: #ff4466;'>❌ Falha ao contactar servidor local.</span>`;
+                btn.disabled = false;
+                btn.innerText = "TESTAR CONEXÃO";
+            }
+        }
+
+        function simulateSync() {
+            const bar = document.getElementById('setup-progress');
+            const status = document.getElementById('setup-status-text');
+            const btn = document.getElementById('finish-btn');
+            let progress = 0;
+            const phrases = [
+                "ESTABELECENDO TÚNEL QUÂNTICO...",
+                "SINCRONIZANDO CAUSAL BANK...",
+                "MAPEANDO FERRAMENTAS LOCAIS...",
+                "INJETANDO PERSONALIDADE...",
+                "SISTEMA PRONTO."
+            ];
+
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    status.innerText = phrases[4];
+                    btn.disabled = false;
+                    btn.style.boxShadow = "0 0 30px var(--accent-glow)";
+                } else {
+                    status.innerText = phrases[Math.floor(progress / 25)] || phrases[3];
+                }
+                bar.style.width = `${progress}%`;
+            }, 500);
+        }
+
+        async function finishOnboarding() {
+            const agentName = document.getElementById('setup-agent-name').value || "Rebeka";
+            const userName = document.getElementById('setup-user-name').value || "Usuário";
+            const apiKeys = {
+                moonshot: document.getElementById('key-moonshot').value,
+                openai: document.getElementById('key-openai').value,
+                anthropic: document.getElementById('key-anthropic').value,
+                google: document.getElementById('key-google').value
+            };
+
+            try {
+                const res = await fetch('/api/onboarding/setup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ agent_name: agentName, user_name: userName, api_keys: apiKeys })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('onboarding-overlay').classList.remove('active');
+                    location.reload(); // Recarrega para aplicar o nome em tudo
+                }
+            } catch (e) {
+                alert("Erro ao salvar configuração.");
+            }
+        }
+
+        async function resetOnboarding() {
+            if (!confirm('Isso vai apagar suas chaves de API e voltar para a tela de configuração. Continuar?')) {
+                return;
+            }
+            try {
+                const res = await fetch('/api/onboarding/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    location.reload();
+                }
+            } catch (e) {
+                alert('Erro ao resetar configuração.');
+            }
+        }
+
+        // ─── Status Update ───
+        async function updateStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+
+                // Aplicar nome do agente
+                const name = data.agent_name || "Rebeka";
+                document.title = `${name} | Control Center`;
+                document.getElementById('chat-header-title').innerText = `Conversa com ${name}`;
+
+                const initialMsg = document.getElementById('initial-message');
+                if (initialMsg && initialMsg.innerText.includes("Rebeka")) {
+                    initialMsg.innerText = initialMsg.innerText.replace(/Rebeka/g, name);
+                }
+
+                // Verificar onboarding
+                if (!data.onboarding_completed) {
+                    document.getElementById('onboarding-overlay').classList.add('active');
+                }
+            } catch (e) { }
+        }
+
+        // ─── Init ───
+        loadConfig();
+        updateStatus();
+        setInterval(updateStatus, 10000);
+    </script>
+</body>
+
+</html>

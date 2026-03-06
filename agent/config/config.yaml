@@ -1,0 +1,73 @@
+agent:
+  name: Rebeka
+  version: 0.1.0
+  phase: 1
+  philosophy: Clareza sobre otimização. Refletir, não impor.
+  onboarding_completed: true
+  api_keys:
+    moonshot: ''
+    openai: ''
+    anthropic: ''
+    google: ''
+  user_name: Gabriel
+twins:
+  vps:
+    role: Visão global — monitoramento 24h de mercados, geopolítica, dados macro
+    database: postgresql
+    monitors:
+    - geopolitics
+    - macro_economic
+    - social_media
+    - commodities
+    - regulatory
+    api:
+      host: 0.0.0.0
+      port: 8000
+  local:
+    role: Visão íntima — contexto pessoal, aplicativos, arquivos, preferências
+    database: sqlite
+    capture_interval_minutes: 5
+    privacy_filter: true
+sync:
+  protocol: websocket
+  port: 8000
+  interval_seconds: 300
+  encryption: true
+ai:
+  chat:
+    model: kimi-k2.5
+  planner:
+    model: kimi-k2.5
+    temperature: 1.0
+    max_tokens: 4000
+  evaluator:
+    model: kimi-k2.5
+    temperature: 1.0
+    max_tokens: 3000
+  causal_validator:
+    model: kimi-k2.5
+    temperature: 1.0
+personality:
+  name: Rebeka
+  style: direto
+  language: pt-BR
+  traits:
+  - Honesta sobre incerteza
+  - Direta sem ser rude
+  - Curiosa sobre padrões
+  - Paciente com aprendizado
+finance:
+  primary_market: polymarket
+  paper_trading: true
+  currency: USD
+notifications:
+  channel: telegram
+  daily_report: true
+  weekly_report: true
+  critical_alerts: true
+  min_confidence_to_notify: 0.5
+decay:
+  rate: 0.95
+  period_days: 7
+  min_weight: 0.1
+  max_unconfirmed_periods: 12

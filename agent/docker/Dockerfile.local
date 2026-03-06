@@ -1,0 +1,28 @@
+FROM python:3.12-slim
+
+LABEL maintainer="Agente Autônomo — Gêmeo Local"
+LABEL description="Gêmeo Local: captura de contexto íntimo, executor de ambiente, privacy filter"
+
+WORKDIR /app
+
+# Dependências do sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Dependências Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Código do agente
+COPY shared/ ./shared/
+COPY local/ ./local/
+COPY config/ ./config/
+
+# Variáveis de ambiente padrão
+ENV AGENT_TWIN=local
+ENV AGENT_ENV=production
+ENV PYTHONPATH=/app
+
+CMD ["python", "-m", "local.main"]

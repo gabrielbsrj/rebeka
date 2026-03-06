@@ -1,0 +1,62 @@
+# =============================================================================
+# Agente de Inteligência Autônomo — Dependências
+# =============================================================================
+
+# --- Core ---
+litellm==1.55.10             # Interface única para qualquer API de IA (OpenAI, Anthropic, Groq, etc.)
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: MIT
+pydantic==2.10.5             # Validação de dados e schemas
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: MIT
+pyyaml==6.0.2                # Leitura de arquivos YAML (config, security)
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: MIT
+python-dotenv==1.0.1         # Variáveis de ambiente via .env
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: BSD
+
+# --- Database ---
+sqlalchemy==2.0.36           # ORM para PostgreSQL (VPS) e SQLite (Local)
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: MIT
+alembic==1.14.1              # Migrações de banco de dados
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: MIT
+psycopg2-binary==2.9.10      # Driver PostgreSQL (VPS)
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✗, Licença: LGPL
+
+# --- VPS: API e Workers ---
+fastapi==0.115.6             # API REST para sincronização e comunicação
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: MIT
+uvicorn==0.34.0              # ASGI server para FastAPI
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: BSD
+websockets==14.1             # Canal de sincronização entre gêmeos
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: BSD
+celery==5.4.0                # Workers assíncronos para monitores
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✗, Licença: BSD
+redis==5.2.1                 # Backend para Celery e cache
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✗, Licença: MIT
+
+# --- Versionamento ---
+gitpython==3.1.44            # Versionamento automático de cada evolução de código
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✗, Licença: BSD
+
+# --- Testing ---
+pytest==8.3.4                # Framework de testes
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: MIT
+pytest-asyncio==0.25.0       # Testes assíncronos
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: Apache 2.0
+hypothesis==6.119.3          # Property-based testing — invariantes lógicos
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: MPL 2.0
+
+# --- Utilities ---
+httpx==0.27.2                # HTTP client assíncrono para monitores
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: BSD
+aiofiles==24.1.0             # I/O assíncrono de arquivos
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: Apache 2.0
+cryptography==44.0.0           # Criptografia para o Master Vault (AES-256)
+                              # Compatível: VPS ✓, Desktop ✓, Mobile ✓, Licença: Apache 2.0 / BSD
+# --- High Fidelity Monitors ---
+yfinance==0.2.52             # Dados de mercado (Yahoo Finance)
+fredapi==0.5.2               # Dados econômicos (FRED)
+feedparser==6.0.11           # RSS Parsing (necessário para os monitores atuais)
+
+# --- Desktop Twin Dependencies ---
+playwright>=1.40.0           # Automação de browser e captura de tela
+opencv-python>=4.9.0         # Processamento de imagem para CV
+pyautogui>=0.9.54            # Interação com desktop (mouse/teclado)
