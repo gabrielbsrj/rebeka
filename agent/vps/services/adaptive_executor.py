@@ -518,7 +518,7 @@ class AdaptiveExecutorService:
             return "evidence_weak"
         if success_count >= 1 and failure_count == 0 and rolling_quality_score >= 0.6:
             return "execution_productive"
-        if success_count >= max(1, failure_count) and rolling_quality_score >= 0.65:
+        if success_count >= max(1, failure_count) and rolling_quality_score >= 0.6:
             return "execution_productive"
         return "mixed"
 
