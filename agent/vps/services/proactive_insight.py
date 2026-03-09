@@ -2,8 +2,8 @@
 import asyncio
 import logging
 from typing import Set
-from shared.database.causal_bank import CausalBank
-from shared.communication.chat_manager import ChatManager
+from memory.causal_bank import CausalBank
+from interfaces.chat_manager import ChatManager
 
 logger = logging.getLogger(__name__)
 
@@ -144,3 +144,4 @@ class ProactiveInsightService:
 
     def stop(self):
         self.is_running = False
+
