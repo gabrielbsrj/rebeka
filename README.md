@@ -204,6 +204,33 @@ Fase 6 — Expansão de Poderes   █████░░░░░  50%  ← você
 2. Refinar as automações do WhatsApp
 3. Avaliar impacto no System Conflict Checker
 
+---
+
+### 🧠 Adaptive Cognitive Loop (NOVO!)
+
+Uma camada de inteligência adaptativa que aproxima o sistema de comportamento agentivo geral:
+
+```
+Perceber → Priorizar → Lembrar → Planejar → Governar → Despachar → Absorver Retorno → Replanejar
+```
+
+#### Componentes:
+
+| Serviço | Arquivo | Função |
+|---------|---------|--------|
+| **Global Workspace** | `vps/services/global_workspace.py` | Consolida sinais do mundo, prioriza focos |
+| **Episodic Memory** | `vps/services/episodic_memory.py` | Mantém continuidade entre ciclos |
+| **Adaptive Planner** | `vps/services/adaptive_planner.py` | Modos cognitivos, policy layer, self-model |
+| **Adaptive Executor** | `vps/services/adaptive_executor.py` | Despacho com qualidade, follow-up seguro |
+
+#### O que permite:
+
+- Manter foco global (não apenas reagir a eventos)
+- Abrir frentes operacionais persistentes
+- Policy layer explícita: `auto_execute`, `guided_execute`, `needs_validation`, `defer`
+- Self-model operacional com postura de autonomia por domínio
+- Consolidação de aprendizado entre ciclos
+
 **Bem-vindo à era da Inteligência Autônoma.**
 
 ---
@@ -389,5 +416,32 @@ Phase 6 — Expansion of Powers  █████░░░░░  50%  ← you ar
 1. Couple the v6 modules to the Orchestrator
 2. Refine WhatsApp automations
 3. Evaluate impact on the System Conflict Checker
+
+---
+
+### 🧠 Adaptive Cognitive Loop (NEW!)
+
+An adaptive intelligence layer that brings the system closer to general agentive behavior:
+
+```
+Perceive → Prioritize → Remember → Plan → Govern → Dispatch → Absorb Feedback → Replan
+```
+
+#### Components:
+
+| Service | File | Function |
+|---------|------|----------|
+| **Global Workspace** | `vps/services/global_workspace.py` | Consolidates world signals, prioritizes focuses |
+| **Episodic Memory** | `vps/services/episodic_memory.py` | Maintains continuity between cycles |
+| **Adaptive Planner** | `vps/services/adaptive_planner.py` | Cognitive modes, policy layer, self-model |
+| **Adaptive Executor** | `vps/services/adaptive_executor.py` | Quality-scored dispatch, safe follow-up |
+
+#### What it enables:
+
+- Global focus maintenance (not just reacting to events)
+- Persistent operational fronts
+- Explicit policy layer: `auto_execute`, `guided_execute`, `needs_validation`, `defer`
+- Operational self-model with autonomy posture per domain
+- Learning consolidation between cycles
 
 **Welcome to the era of Autonomous Intelligence.**
