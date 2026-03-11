@@ -20,7 +20,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from shared.intent.coherence_tracker import CoherenceTracker
+from intelligence.coherence_tracker import CoherenceTracker
 
 
 class TestCoherenceTrackerInit:
@@ -377,3 +377,4 @@ class TestExtractDeclaredValues:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

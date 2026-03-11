@@ -23,11 +23,11 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from shared.database.causal_bank import CausalBank
-from shared.database.sparse_merkle_tree import SparseMerkleTree
-from shared.core.planner import Planner
-from shared.core.evaluator import Evaluator
-from shared.core.executor_base import ExecutorBase
+from memory.causal_bank import CausalBank
+from memory.sparse_merkle_tree import SparseMerkleTree
+from core.planner import Planner
+from core.evaluator import Evaluator
+from core.executor_base import ExecutorBase
 
 
 class TestEndToEndPipeline:
@@ -336,3 +336,4 @@ class TestPipelineWithNewMonitors:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])
+

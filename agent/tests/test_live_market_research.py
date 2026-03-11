@@ -7,7 +7,7 @@ import os
 # Ajustar PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from agent.local.executor_local import LocalExecutor
+from local.executor_local import LocalExecutor
 
 # Configurar logs
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -37,3 +37,4 @@ async def test_live_research():
 
 if __name__ == "__main__":
     asyncio.run(test_live_research())
+

@@ -20,7 +20,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from shared.intent.ambiguity_resolver import AmbiguityResolver
+from intelligence.ambiguity_resolver import AmbiguityResolver
 
 
 class TestAmbiguityResolverInit:
@@ -439,3 +439,4 @@ class TestFallbackResult:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

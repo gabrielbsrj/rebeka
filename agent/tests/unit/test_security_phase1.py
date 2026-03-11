@@ -9,7 +9,7 @@ INVARIANTE: Hash do YAML verificado na inicialização.
 
 import os
 import pytest
-from shared.core.security_phase1 import SecurityPhase1
+from core.security_phase1 import SecurityPhase1
 
 
 @pytest.fixture
@@ -92,3 +92,4 @@ class TestSecurityPhase1:
         """Nível de autonomia padrão deve ser conservador."""
         level = security.get_autonomy_level("unknown_change")
         assert level == "user_only"
+

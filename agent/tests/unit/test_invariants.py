@@ -22,8 +22,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from shared.evolution.property_tester import PropertyTester
-from shared.database.sparse_merkle_tree import SparseMerkleTree
+from intelligence.property_tester import PropertyTester
+from memory.sparse_merkle_tree import SparseMerkleTree
 
 
 class TestConfidenceCalibrationInvariant:
@@ -330,3 +330,4 @@ class TestPropertyBasedTesting:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

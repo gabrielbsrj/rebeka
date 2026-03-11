@@ -11,8 +11,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, List
 
-from shared.database.causal_bank import CausalBank
-from shared.database.sparse_merkle_tree import SparseMerkleTree
+from memory.causal_bank import CausalBank
+from memory.sparse_merkle_tree import SparseMerkleTree
 
 logger = logging.getLogger(__name__)
 
@@ -124,3 +124,4 @@ class SelectiveForgetter:
         })
         
         return 0
+

@@ -1,5 +1,5 @@
 # agent/tests/test_proactive_chat.py
-from shared.database.causal_bank import CausalBank
+from memory.causal_bank import CausalBank
 import time
 
 def test_proactive_insight():
@@ -23,3 +23,4 @@ def test_proactive_insight():
 
 if __name__ == "__main__":
     test_proactive_insight()
+

@@ -19,7 +19,7 @@ import logging
 import httpx
 from typing import Dict, Any, Optional
 
-from shared.core.executor_base import ExecutorBase, ExecutionError
+from core.executor_base import ExecutorBase, ExecutionError
 
 logger = logging.getLogger(__name__)
 
@@ -120,3 +120,4 @@ class FinancialExecutor(ExecutorBase):
     def close(self):
         """Fecha as conexões HTTP do executor."""
         self.client.close()
+

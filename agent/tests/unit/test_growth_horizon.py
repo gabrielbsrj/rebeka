@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timezone
-from shared.database.causal_bank import CausalBank
-from shared.intent.growth_horizon import GrowthHorizon
+from memory.causal_bank import CausalBank
+from intelligence.growth_horizon import GrowthHorizon
 
 @pytest.fixture
 def test_bank():
@@ -66,3 +66,4 @@ def test_propose_growth_conversation(horizon):
     msg = horizon.propose_growth_conversation(target_id)
     assert msg is not None
     assert "trading" in msg
+

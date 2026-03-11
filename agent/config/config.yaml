@@ -5,7 +5,7 @@ agent:
   philosophy: Clareza sobre otimização. Refletir, não impor.
   onboarding_completed: true
   api_keys:
-    moonshot: ''
+    moonshot: sk-hwp2YDwvqF7BPkh0mWr5oAXMPXF7GOgdQ1uZ5L1dnEoKsQdq
     openai: ''
     anthropic: ''
     google: ''
@@ -35,7 +35,7 @@ sync:
   encryption: true
 ai:
   chat:
-    model: kimi-k2.5
+    model: ollama/qwen3.5:9b
   planner:
     model: kimi-k2.5
     temperature: 1.0

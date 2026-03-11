@@ -27,7 +27,7 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional
 
-from shared.database.causal_bank import CausalBank
+from memory.causal_bank import CausalBank
 
 logger = logging.getLogger(__name__)
 
@@ -357,3 +357,4 @@ class FrictionLearner:
                 "receptivo_rate": effectiveness.get("receptivo_rate", 0),
             },
         }
+

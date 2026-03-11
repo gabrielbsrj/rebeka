@@ -7,8 +7,8 @@ import asyncio
 import os
 import discord
 from discord.ext import commands
-from shared.communication.chat_manager import ChatManager
-from shared.core.tool_registry import ToolRegistry
+from interfaces.chat_manager import ChatManager
+from core.tool_registry import ToolRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -70,3 +70,4 @@ class DiscordAdapter(commands.Bot):
 
             final_content = response_data["content"] or "Aqui está."
             await message.reply(final_content)
+

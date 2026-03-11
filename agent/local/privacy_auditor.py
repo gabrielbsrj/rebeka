@@ -7,8 +7,8 @@ import logging
 import re
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
-from shared.database.causal_bank import CausalBank
-from shared.database.models import PrivacyAuditLog
+from memory.causal_bank import CausalBank
+from memory.models import PrivacyAuditLog
 
 logger = logging.getLogger(__name__)
 
@@ -109,3 +109,4 @@ class PrivacyAuditor:
         except Exception as e:
             logger.error(f"Erro ao buscar audit trail: {str(e)}")
             return []
+

@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timezone
-from shared.database.causal_bank import CausalBank
-from shared.intent.intentional_friction import IntentionalFriction
+from memory.causal_bank import CausalBank
+from intelligence.intentional_friction import IntentionalFriction
 
 @pytest.fixture
 def test_bank():
@@ -78,3 +78,4 @@ def test_record_user_response(friction, test_bank):
         response="receptivo"
     )
     assert True
+

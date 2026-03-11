@@ -9,14 +9,14 @@ INVARIANTE: Hipótese DEVE ter uncertainty_acknowledged.
 """
 
 import pytest
-from shared.database.causal_bank import CausalBank
+from memory.causal_bank import CausalBank
 
 
 @pytest.fixture
 def bank():
     """Cria um CausalBank com SQLite em memória."""
-    from shared.database.causal_bank import CausalBank
-    from shared.database.models import Base
+    from memory.causal_bank import CausalBank
+    from memory.models import Base
     import os
     os.environ["TEST_DATABASE_URL"] = "sqlite:///:memory:"
     cb = CausalBank("sqlite:///:memory:", origin="test")
@@ -210,7 +210,7 @@ class TestCausalBankIntegrity:
         assert bank.verify_integrity(new_pattern_id)
         
         # Lê ambos para comparar
-        from shared.database.models import BehavioralPattern
+        from memory.models import BehavioralPattern
         with bank._SessionFactory() as session:
             orig = session.query(BehavioralPattern).filter_by(id=pattern_id).first()
             new = session.query(BehavioralPattern).filter_by(id=new_pattern_id).first()
@@ -222,4 +222,5 @@ class TestCausalBankIntegrity:
             assert len(new.evidence) == 2
             
             assert new.parent_pattern_id == pattern_id
+
 

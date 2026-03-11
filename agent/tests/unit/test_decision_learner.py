@@ -21,7 +21,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from shared.intent.decision_learner import DecisionLearner
+from intelligence.decision_learner import DecisionLearner
 
 
 class TestDecisionLearnerInit:
@@ -446,3 +446,4 @@ class TestContextKey:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

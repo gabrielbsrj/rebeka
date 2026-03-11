@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timezone
-from shared.database.causal_bank import CausalBank
-from shared.intent.behavioral_pattern_detector import BehavioralPatternDetector
+from memory.causal_bank import CausalBank
+from intelligence.behavioral_pattern_detector import BehavioralPatternDetector
 
 @pytest.fixture
 def test_bank():
@@ -79,3 +79,4 @@ def test_get_limiting_patterns(detector, test_bank):
     
     limiting = detector.get_limiting_patterns()
     assert len(limiting) >= 0
+

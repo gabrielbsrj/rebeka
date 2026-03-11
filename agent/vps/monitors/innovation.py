@@ -33,7 +33,7 @@ import feedparser
 
 import httpx
 
-from shared.database.causal_bank import CausalBank
+from memory.causal_bank import CausalBank
 from vps.monitors.base_monitor import BaseMonitor
 
 logger = logging.getLogger(__name__)
@@ -271,3 +271,4 @@ class InnovationMonitor(BaseMonitor):
                 "url": paper.get("url"),
             }
         }
+

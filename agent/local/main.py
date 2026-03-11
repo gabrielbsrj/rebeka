@@ -7,7 +7,7 @@ import logging
 import asyncio
 import signal
 import os
-from shared.database.causal_bank import CausalBank
+from memory.causal_bank import CausalBank
 from local.sync_client import SyncClient
 from local.privacy_auditor import PrivacyAuditor
 from local.privacy_filter import PrivacyFilter
@@ -75,3 +75,4 @@ if __name__ == "__main__":
         asyncio.run(main_loop())
     except KeyboardInterrupt:
         pass
+

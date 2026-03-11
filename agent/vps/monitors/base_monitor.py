@@ -8,7 +8,7 @@ import logging
 import time
 from typing import Dict, Any, Optional, List
 from threading import Thread, Event
-from shared.database.causal_bank import CausalBank
+from memory.causal_bank import CausalBank
 
 logger = logging.getLogger(__name__)
 
@@ -85,3 +85,4 @@ class BaseMonitor(abc.ABC):
         if self._thread:
             self._thread.join()
         logger.info(f"Monitor {self.__class__.__name__} parado.")
+

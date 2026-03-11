@@ -1,7 +1,7 @@
 import pytest
 import json
-from shared.database.causal_bank import CausalBank
-from shared.intent.conversation_analyzer import ConversationAnalyzer
+from memory.causal_bank import CausalBank
+from intelligence.conversation_analyzer import ConversationAnalyzer
 from unittest.mock import patch, MagicMock
 
 @pytest.fixture
@@ -62,3 +62,4 @@ def test_detect_emotional_trends(analyzer, test_bank):
     assert trends is not None
     assert "ansioso" in trends.get("dominant_emotions", {})
     assert trends["dominant_emotions"]["ansioso"]["count"] == 2
+

@@ -9,7 +9,7 @@ INVARIANTE: Append-only respeitado.
 """
 
 import pytest
-from shared.database.sparse_merkle_tree import SparseMerkleTree, EMPTY_HASH
+from memory.sparse_merkle_tree import SparseMerkleTree, EMPTY_HASH
 
 
 class TestSparseMerkleTree:
@@ -171,3 +171,4 @@ class TestSparseMerkleTree:
             tree2.insert_leaf(f"key{i}", {"data": f"value{i}"}, "table")
 
         assert tree1.root == tree2.root
+

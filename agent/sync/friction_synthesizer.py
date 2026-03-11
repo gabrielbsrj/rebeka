@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 import litellm
-from shared.database.causal_bank import CausalBank
+from memory.causal_bank import CausalBank
 
 logger = logging.getLogger(__name__)
 
@@ -197,7 +197,7 @@ Responda APENAS em JSON:
     def _get_limiting_patterns(self) -> List[Dict[str, Any]]:
         """Busca padrões potencialmente limitantes."""
         try:
-            from shared.intent.behavioral_pattern_detector import BehavioralPatternDetector
+            from intelligence.behavioral_pattern_detector import BehavioralPatternDetector
             detector = BehavioralPatternDetector(self.bank)
             return detector.get_limiting_patterns(min_confidence=0.5)
         except Exception:
@@ -314,3 +314,4 @@ Sinais de Conversa (ultimos 3):
                 if by_level else "moderada"
             ),
         }
+

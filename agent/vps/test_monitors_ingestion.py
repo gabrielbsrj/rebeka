@@ -5,7 +5,7 @@ import asyncio
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from shared.database.causal_bank import CausalBank
+from memory.causal_bank import CausalBank
 from vps.monitors.geopolitics import GeopoliticsMonitor
 from vps.monitors.macro import MacroMonitor
 from vps.monitors.commodities import CommoditiesMonitor
@@ -50,3 +50,4 @@ def test_monitors():
 
 if __name__ == "__main__":
     test_monitors()
+

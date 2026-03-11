@@ -10,9 +10,9 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Dict
 import os
-from shared.communication.chat_manager import ChatManager
-from shared.core.tool_registry import registry
-from shared.core.config_loader import (
+from interfaces.chat_manager import ChatManager
+from core.tool_registry import registry
+from core.config_loader import (
     get_available_models,
     get_active_chat_model,
     set_active_chat_model,
@@ -21,11 +21,13 @@ from shared.core.config_loader import (
     is_onboarding_completed,
     complete_onboarding
 )
+from local.executor_local import LocalExecutor
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Rebeka Dashboard Backend")
-chat_manager = ChatManager(model="openai/kimi-k2.5")
+chat_manager = ChatManager() # Deixa carregar o modelo do config
+executor = LocalExecutor()
 
 # Montar diretório de estáticos para servir o feed do browser
 static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -84,14 +86,10 @@ async def chat_endpoint(request: ChatRequest):
                     args = json.loads(tool_call.function.arguments)
                     logger.info(f"Executando {tool_name} pela Rebeka... (iteração {iterations})")
                     
-                    # Fix: A VPS não pode rodar o LocalExecutor diretamente.
-                    # Na v5.0 isso será roteado pela Orchestration Layer.
-                    deferred_msg = {
-                        "status": "deferred",
-                        "message": f"Aviso do Sistema: O ambiente na VPS não pode executar a ferramenta '{tool_name}' diretamente na máquina local no momento. Por favor, aguarde a atualização da Orchestration Layer v5.0 ou cole o conteúdo no chat."
-                    }
-                    chat_manager.add_tool_result(tool_call.id, tool_name, json.dumps(deferred_msg))
-                    action_logs.append(f"DEFERRED: {tool_name}")
+                    # Execução REAL via LocalExecutor
+                    result = await executor.execute(tool_name, args)
+                    chat_manager.add_tool_result(tool_call.id, tool_name, json.dumps(result))
+                    action_logs.append(f"EXEC: {tool_name}")
                 except Exception as e:
                     error_result = {"status": "error", "message": str(e)}
                     chat_manager.add_tool_result(tool_call.id, tool_name, json.dumps(error_result))
@@ -150,7 +148,7 @@ async def onboarding_setup(request: OnboardingRequest):
 @app.post("/api/onboarding/reset")
 async def onboarding_reset():
     """Reseta o onboarding e limpa as API keys, permitindo reconfiguração."""
-    from shared.core.config_loader import reset_onboarding
+    from core.config_loader import reset_onboarding
     ok = reset_onboarding()
     if ok:
         chat_manager.reset_history()
@@ -298,7 +296,7 @@ async def get_status():
 
 @app.get("/api/patterns")
 async def get_patterns():
-    from shared.database.causal_bank import CausalBank
+    from memory.causal_bank import CausalBank
     bank = CausalBank(origin="vps")
     # Busca padrões de todos os domínios
     all_patterns = []
@@ -315,4 +313,57 @@ def start_dashboard(host: str = "0.0.0.0", port: int = 8085):
     config = uvicorn.Config(app, host=host, port=port, loop="asyncio")
     server = uvicorn.Server(config)
     asyncio.run(server.serve())
+
+
+# === VOICE ENDPOINTS ===
+
+@app.post("/api/voice/speak")
+async def speak_endpoint(request: Request):
+    """Make Rebeka speak the given text."""
+    try:
+        body = await request.json()
+        text = body.get("text", "")
+        
+        if not text:
+            return {"success": False, "error": "No text provided"}
+            
+        # Import and use voice module
+        from interfaces.voice_module import get_voice_manager
+        voice = get_voice_manager()
+        voice.speak(text)
+        
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Voice speak error: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/voice/status")
+async def voice_status_endpoint():
+    """Get voice status."""
+    from interfaces.voice_module import get_voice_manager
+    voice = get_voice_manager()
+    return {
+        "voice_enabled": voice.is_voice_enabled(),
+        "tts_available": True,
+        "stt_available": True
+    }
+
+
+@app.post("/api/voice/toggle")
+async def voice_toggle_endpoint(request: Request):
+    """Toggle voice on/off."""
+    try:
+        body = await request.json()
+        enabled = body.get("enabled", True)
+        
+        from interfaces.voice_module import get_voice_manager
+        voice = get_voice_manager()
+        voice.toggle_voice(enabled)
+        
+        return {"success": True, "voice_enabled": enabled}
+    except Exception as e:
+        logger.error(f"Voice toggle error: {e}")
+        return {"success": False, "error": str(e)}
+
 

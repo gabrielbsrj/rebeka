@@ -16,7 +16,7 @@ import time
 from typing import Dict, Any, Optional, List
 import feedparser
 
-from shared.database.causal_bank import CausalBank
+from memory.causal_bank import CausalBank
 from vps.monitors.base_monitor import BaseMonitor
 
 logger = logging.getLogger(__name__)
@@ -85,3 +85,4 @@ class GeopoliticsMonitor(BaseMonitor):
                 "published": raw_item["published"]
             }
         }
+

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, AsyncMock
-from shared.orchestration.agent_router import AgentRouter
-from shared.orchestration.idea_decomposer import IdeaDecomposer
+from core.agent_router import AgentRouter
+from core.idea_decomposer import IdeaDecomposer
 
 def test_agent_router_heuristics():
     """Testa se o router consegue rotear baseado no nome da tarefa."""
@@ -70,3 +70,4 @@ async def test_idea_decomposer_parsing():
     assert result["objetivo_central"] == "Testar API"
     assert len(result["componentes"]) == 1
     assert result["componentes"][0]["executor"] == "cursor_agent"
+

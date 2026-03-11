@@ -21,6 +21,12 @@
             --border: rgba(255, 255, 255, 0.1);
         }
 
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
         body {
             background: var(--bg-dark);
             color: var(--text);
@@ -125,6 +131,31 @@
         .input-area {
             display: flex;
             gap: 10px;
+            align-items: center;
+        }
+
+        .input-area button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 12px 15px;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .input-area button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--accent);
+        }
+
+        #mic-btn {
+            font-size: 1.4rem;
+        }
+
+        #speaker-btn {
+            font-size: 1.2rem;
         }
 
         input[type="text"] {
@@ -618,9 +649,12 @@
                     Como posso ajudá-lo hoje?</div>
             </div>
             <div class="input-area">
+                <button id="mic-btn" onclick="toggleListening()" title="Pressione para falar">🎤</button>
                 <input type="text" id="user-input" placeholder="Peça algo à Rebeka..."
                     onkeydown="if(event.key==='Enter') sendMessage()">
                 <button onclick="sendMessage()">ENVIAR</button>
+                <button id="speaker-btn" onclick="toggleSpeaker()" title="Ativar/Desativar voz">🔊</button>
+                <button id="wake-word-btn" onclick="toggleWakeWord()" title="Modo wake word">👂</button>
             </div>
         </div>
 
@@ -881,6 +915,145 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
+        // ─── Voice Functions ───
+        let voiceEnabled = true;
+        let isListening = false;
+        let recognition = null;
+        let wakeWordEnabled = true;
+        const WAKE_WORDS = ['rebec', 'ei rebec', 'hey rebec', 'ó rebec'];
+
+        function initSpeech() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showToast('Reconhecimento de voz não disponível neste navegador');
+                return null;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const rec = new SpeechRecognition();
+            rec.lang = 'pt-BR';
+            rec.continuous = true;
+            rec.interimResults = true;
+            
+            rec.onresult = function(event) {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript.toLowerCase();
+                    }
+                }
+                
+                if (finalTranscript) {
+                    console.log('Escutou:', finalTranscript);
+                    
+                    // Check for wake word
+                    if (wakeWordEnabled) {
+                        const isWakeWord = WAKE_WORDS.some(w => finalTranscript.includes(w));
+                        
+                        if (!isWakeWord) {
+                            // Ignore - user is talking to someone else
+                            return;
+                        }
+                        
+                        // Remove wake word from message
+                        let message = finalTranscript;
+                        WAKE_WORDS.forEach(w => message = message.replace(w, '').trim());
+                        
+                        if (message) {
+                            document.getElementById('user-input').value = message;
+                            showToast('Ouvindo!');
+                            sendMessage();
+                        }
+                    } else {
+                        document.getElementById('user-input').value = finalTranscript;
+                        setTimeout(() => {
+                            if (document.getElementById('user-input').value === finalTranscript) {
+                                sendMessage();
+                            }
+                        }, 1500);
+                    }
+                }
+            };
+            
+            rec.onerror = function(event) {
+                console.error('Speech error:', event.error);
+            };
+            
+            rec.onend = function() {
+                if (isListening && recognition) {
+                    try { recognition.start(); } catch(e) {}
+                }
+            };
+            
+            return rec;
+        }
+
+        function toggleWakeWord() {
+            wakeWordEnabled = !wakeWordEnabled;
+            const btn = document.getElementById('wake-word-btn');
+            btn.innerText = wakeWordEnabled ? '👂' : '🎤';
+            btn.style.color = wakeWordEnabled ? '#00ff88' : '';
+            showToast(wakeWordEnabled ? 'Modo wake word ativado' : 'Modo livre ativado');
+        }
+
+        function toggleListening() {
+            if (isListening) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        }
+
+        function startListening() {
+            if (!recognition) {
+                recognition = initSpeech();
+            }
+            if (recognition) {
+                isListening = true;
+                document.getElementById('mic-btn').style.color = '#00ff88';
+                document.getElementById('mic-btn').style.animation = 'pulse 1s infinite';
+                recognition.start();
+                showToast('Ouvindo... Fale agora!');
+            }
+        }
+
+        function stopListening() {
+            isListening = false;
+            document.getElementById('mic-btn').style.color = '';
+            document.getElementById('mic-btn').style.animation = '';
+            if (recognition) {
+                try { recognition.stop(); } catch(e) {}
+            }
+        }
+
+        function toggleSpeaker() {
+            voiceEnabled = !voiceEnabled;
+            const btn = document.getElementById('speaker-btn');
+            btn.innerText = voiceEnabled ? '🔊' : '🔇';
+            
+            // Save preference
+            fetch('/api/voice/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: voiceEnabled })
+            });
+            
+            showToast(voiceEnabled ? 'Voz ativada' : 'Voz desativada');
+        }
+
+        // Make Rebeka speak after response
+        async function speakResponse(text) {
+            if (!voiceEnabled) return;
+            
+            try {
+                await fetch('/api/voice/speak', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+            } catch(e) {
+                console.error('TTS error:', e);
+            }
+        }
+
         // ─── Chat ───
         async function sendMessage() {
             const input = document.getElementById('user-input');
@@ -909,6 +1082,9 @@
                 });
                 const data = await response.json();
                 rebekaDiv.innerText = data.content;
+                
+                // Make Rebeka speak the response
+                speakResponse(data.content);
 
                 if (data.action_log) {
                     const log = document.getElementById('action-log');

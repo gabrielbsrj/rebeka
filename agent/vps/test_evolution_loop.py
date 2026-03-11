@@ -5,12 +5,12 @@ from datetime import datetime, timezone
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from shared.database.causal_bank import CausalBank
-from shared.evolution.observer import Observer
-from shared.evolution.developer import Developer
-from shared.evolution.sandbox import Sandbox
-from shared.evolution.property_tester import PropertyTester
-from shared.evolution.security_analyzer import SecurityAnalyzer
+from memory.causal_bank import CausalBank
+from intelligence.observer import Observer
+from intelligence.developer import Developer
+from intelligence.sandbox import Sandbox
+from intelligence.property_tester import PropertyTester
+from intelligence.security_analyzer import SecurityAnalyzer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 def test_full_evolution_loop():
     print("=== INICIANDO CICLO DE EVOLUÇÃO REBEKA ===")
     
-    from shared.evolution.deployer import Deployer
+    from intelligence.deployer import Deployer
     
     bank = CausalBank(origin="vps")
     observer = Observer(bank)
@@ -118,3 +118,4 @@ def test_full_evolution_loop():
 
 if __name__ == "__main__":
     test_full_evolution_loop()
+

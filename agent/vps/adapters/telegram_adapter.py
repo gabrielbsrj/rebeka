@@ -8,8 +8,8 @@ import os
 import json
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from shared.communication.chat_manager import ChatManager
-from shared.core.tool_registry import ToolRegistry
+from interfaces.chat_manager import ChatManager
+from core.tool_registry import ToolRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -91,3 +91,4 @@ class TelegramAdapter:
 
         final_content = response_data["content"] or "Processamento concluído com sucesso."
         await update.message.reply_text(final_content)
+

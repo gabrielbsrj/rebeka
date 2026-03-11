@@ -5,8 +5,18 @@ Coordena módulos, prioridades, eventos e regras de negócio.
 """
 import logging
 from typing import Any
-from agent.core.event_bus import GlobalEventBus
-from agent.core.scheduler import PriorityScheduler
+
+try:
+    from core.event_bus import GlobalEventBus
+    from core.scheduler import PriorityScheduler
+except ImportError:
+    try:
+        from agent.core.event_bus import GlobalEventBus
+        from agent.core.scheduler import PriorityScheduler
+    except ImportError:
+        # Fallback para quando rodando de dentro da pasta core
+        from event_bus import GlobalEventBus
+        from scheduler import PriorityScheduler
 
 logger = logging.getLogger(__name__)
 

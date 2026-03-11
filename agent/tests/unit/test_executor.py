@@ -6,7 +6,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from shared.core.executor_base import ExecutorBase
+from core.executor_base import ExecutorBase
 
 class DummyExecutor(ExecutorBase):
     def _execute_action(self, action, hypothesis):
@@ -47,3 +47,4 @@ def test_executor_wait_action_no_crash():
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

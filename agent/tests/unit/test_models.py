@@ -9,7 +9,7 @@ INVARIANTE: Tabelas são criáveis com SQLite em memória.
 import pytest
 from sqlalchemy import create_engine, inspect
 
-from shared.database.models import (
+from memory.models import (
     Base,
     Signal,
     CausalPattern,
@@ -119,3 +119,4 @@ class TestModels:
             columns = [c["name"] for c in inspector.get_columns(table)]
             assert "merkle_leaf_hash" in columns, \
                 f"Tabela '{table}' precisa de merkle_leaf_hash para integridade"
+

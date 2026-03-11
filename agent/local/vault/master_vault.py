@@ -25,10 +25,27 @@ class MasterVault:
     def __init__(self, storage_path: str = "agent/local/vault/secrets.enc"):
         self.storage_path = os.path.abspath(storage_path)
         self.fernet: Optional[Fernet] = None
-        self._master_key_salt = b'rebeka_vault_salt_v1' # Salt fixado para persistência local
+        salt_file = os.path.join(os.path.dirname(self.storage_path), "vault.salt")
+        if os.path.exists(salt_file):
+            with open(salt_file, "rb") as f:
+                self._master_key_salt = f.read()
+        else:
+            # Compatibilidade com versão antiga que tinha salt fixo hardcoded
+            if os.path.exists(self.storage_path):
+                self._master_key_salt = b'rebeka_vault_salt_v1'
+                logger.warning("Usando salt legado (inseguro) por conta de segredos existentes. Considere rotacionar o vault.")
+            else:
+                self._master_key_salt = os.urandom(32)
+                os.makedirs(os.path.dirname(salt_file), exist_ok=True)
+                with open(salt_file, "wb") as f:
+                    f.write(self._master_key_salt)
         
-        # Auto-unlock em modo desenvolvimento
-        self.unlock("rebeka_default_secure_vault")
+        
+        # Recuperar do ambiente, com fallback seguro apenas localmente, gerando aviso
+        master_pass = os.getenv("VAULT_MASTER_PASSWORD", "rebeka_default_secure_vault")
+        if master_pass == "rebeka_default_secure_vault":
+             logger.warning("VAULT_MASTER_PASSWORD não definida no ambiente. Usando senha local default (INSEGURO SE EM PRODUÇÃO).")
+        self.unlock(master_pass)
 
         
     def unlock(self, master_password: str) -> bool:

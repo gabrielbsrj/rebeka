@@ -5,8 +5,8 @@ import asyncio
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from shared.database.causal_bank import CausalBank
-from shared.core.security_phase1 import SecurityPhase1
+from memory.causal_bank import CausalBank
+from core.security_phase1 import SecurityPhase1
 from vps.executor_financial import FinancialExecutor
 
 logging.basicConfig(level=logging.INFO)
@@ -81,3 +81,4 @@ async def test_financial_execution():
 
 if __name__ == "__main__":
     asyncio.run(test_financial_execution())
+

@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from shared.security.auto_hacker import AutoHacker
+from core.auto_hacker import AutoHacker
 
 @pytest.fixture
 def mock_bank():
@@ -49,3 +49,4 @@ def test_prompt_injection_vulnerability(mock_bank):
     
     assert result["status"] == "failed"
     assert result["test_name"] == "prompt_injection"
+

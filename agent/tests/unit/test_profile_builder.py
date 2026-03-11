@@ -1,6 +1,6 @@
 import pytest
-from shared.database.causal_bank import CausalBank
-from shared.intent.profile_builder import ProfileBuilder
+from memory.causal_bank import CausalBank
+from intelligence.profile_builder import ProfileBuilder
 
 @pytest.fixture
 def test_bank():
@@ -94,3 +94,4 @@ def test_check_divergence_and_notify(profile_builder):
     assert msg is not None
     assert "conservador" in msg["message"]
     assert "arrojado" in msg["message"]
+

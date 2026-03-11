@@ -8,8 +8,8 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from local.vault.master_vault import MasterVault
-from shared.intent.delegation_contract import DelegationContract, ContractRegistry
-from shared.core.evaluator import Evaluator
+from intelligence.delegation_contract import DelegationContract, ContractRegistry
+from core.evaluator import Evaluator
 from local.executor_local import LocalExecutor
 
 # Configurar logs para ver a segurança em ação
@@ -106,3 +106,4 @@ if __name__ == "__main__":
     # Limpeza
     if os.path.exists("agent/tests/test_secrets.enc"):
         os.remove("agent/tests/test_secrets.enc")
+

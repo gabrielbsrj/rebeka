@@ -6,8 +6,8 @@
 import logging
 import time
 from typing import List, Dict, Any
-from shared.database.causal_bank import CausalBank
-from shared.database.causal_validator import CausalValidator
+from memory.causal_bank import CausalBank
+from intelligence.causal_validator import CausalValidator
 
 logger = logging.getLogger(__name__)
 
@@ -108,3 +108,4 @@ class GlobalCorrelator:
         logger.info(f"Promovendo candidato {candidate_id} para Causal Pattern.")
         # Lógica de promoção manual via Dashboard
         pass
+

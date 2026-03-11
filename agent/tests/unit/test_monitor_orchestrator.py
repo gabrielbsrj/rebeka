@@ -21,7 +21,7 @@ class TestMonitorOrchestratorInit:
 
     def test_init_without_bank(self):
         """Deve inicializar sem causal_bank."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         assert orchestrator._causal_bank is None
@@ -30,7 +30,7 @@ class TestMonitorOrchestratorInit:
 
     def test_init_with_bank(self):
         """Deve aceitar causal_bank opcional."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         mock_bank = Mock()
         orchestrator = MonitorOrchestrator(causal_bank=mock_bank)
@@ -42,7 +42,7 @@ class TestSetDomainRelevance:
 
     def test_set_relevance_basic(self):
         """Deve definir relevância de um domínio."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.set_domain_relevance("finance", 0.8)
@@ -51,7 +51,7 @@ class TestSetDomainRelevance:
 
     def test_set_relevance_invalid_high(self):
         """Deve rejeitar relevância > 1.0."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         
@@ -60,7 +60,7 @@ class TestSetDomainRelevance:
 
     def test_set_relevance_invalid_low(self):
         """Deve rejeitar relevância < 0.0."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         
@@ -69,7 +69,7 @@ class TestSetDomainRelevance:
 
     def test_set_relevance_boundary_zero(self):
         """Deve aceitar relevância 0.0."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.set_domain_relevance("finance", 0.0)
@@ -78,7 +78,7 @@ class TestSetDomainRelevance:
 
     def test_set_relevance_boundary_one(self):
         """Deve aceitar relevância 1.0."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.set_domain_relevance("finance", 1.0)
@@ -91,7 +91,7 @@ class TestCreateMonitor:
 
     def test_create_basic(self):
         """Deve criar um monitor ativo."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         result = orchestrator.create_monitor(
@@ -106,7 +106,7 @@ class TestCreateMonitor:
 
     def test_create_duplicate(self):
         """Deve retornar already_active se já existe."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.create_monitor("financial", "finance", {})
@@ -116,7 +116,7 @@ class TestCreateMonitor:
 
     def test_create_resumes_paused(self):
         """Deve resumir se monitor está pausado."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.create_monitor("financial", "finance", {})
@@ -129,7 +129,7 @@ class TestCreateMonitor:
 
     def test_create_logs_to_bank(self):
         """Deve logar evento no banco se disponível."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         mock_bank = Mock()
         orchestrator = MonitorOrchestrator(causal_bank=mock_bank)
@@ -147,7 +147,7 @@ class TestPauseMonitor:
 
     def test_pause_basic(self):
         """Deve pausar um monitor ativo."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.create_monitor("financial", "finance", {})
@@ -160,7 +160,7 @@ class TestPauseMonitor:
 
     def test_pause_not_found(self):
         """Deve retornar not_found se não existe."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         result = orchestrator.pause_monitor("nonexistent", "test")
@@ -169,7 +169,7 @@ class TestPauseMonitor:
 
     def test_pause_already_paused(self):
         """Deve retornar already_paused."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.create_monitor("financial", "finance", {})
@@ -181,7 +181,7 @@ class TestPauseMonitor:
 
     def test_pause_logs_to_bank(self):
         """Deve logar evento de pausa no banco."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         mock_bank = Mock()
         orchestrator = MonitorOrchestrator(causal_bank=mock_bank)
@@ -200,7 +200,7 @@ class TestResumeMonitor:
 
     def test_resume_basic(self):
         """Deve resumir um monitor pausado."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.create_monitor("financial", "finance", {})
@@ -213,7 +213,7 @@ class TestResumeMonitor:
 
     def test_resume_not_found(self):
         """Deve retornar not_found se não está pausado."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         result = orchestrator.resume_monitor("nonexistent")
@@ -222,7 +222,7 @@ class TestResumeMonitor:
 
     def test_resume_active_monitor(self):
         """Deve retornar not_found para monitor já ativo."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.create_monitor("financial", "finance", {})
@@ -237,7 +237,7 @@ class TestDestroyMonitor:
 
     def test_destroy_active(self):
         """Deve destruir um monitor ativo."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.create_monitor("financial", "finance", {})
@@ -249,7 +249,7 @@ class TestDestroyMonitor:
 
     def test_destroy_paused(self):
         """Deve destruir um monitor pausado."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.create_monitor("financial", "finance", {})
@@ -262,7 +262,7 @@ class TestDestroyMonitor:
 
     def test_destroy_not_found(self):
         """Deve retornar not_found."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         result = orchestrator.destroy_monitor("nonexistent", "cleanup")
@@ -275,7 +275,7 @@ class TestAutoAdjustMonitors:
 
     def test_create_on_high_relevance(self):
         """Deve criar monitores quando relevância sobe."""
-        from shared.intent.monitor_orchestrator import (
+        from intelligence.monitor_orchestrator import (
             MonitorOrchestrator,
             RELEVANCE_THRESHOLD_CREATE,
         )
@@ -290,7 +290,7 @@ class TestAutoAdjustMonitors:
 
     def test_pause_on_low_relevance(self):
         """Deve pausar monitores quando relevância cai."""
-        from shared.intent.monitor_orchestrator import (
+        from intelligence.monitor_orchestrator import (
             MonitorOrchestrator,
             RELEVANCE_THRESHOLD_CREATE,
             RELEVANCE_THRESHOLD_PAUSE,
@@ -308,7 +308,7 @@ class TestAutoAdjustMonitors:
 
     def test_no_adjust_unknown_domain(self):
         """Não deve ajustar monitores para domínio sem mapeamento."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         
@@ -318,7 +318,7 @@ class TestAutoAdjustMonitors:
 
     def test_no_duplicate_create(self):
         """Não deve criar duplicatas ao ajustar relevância."""
-        from shared.intent.monitor_orchestrator import (
+        from intelligence.monitor_orchestrator import (
             MonitorOrchestrator,
             RELEVANCE_THRESHOLD_CREATE,
         )
@@ -337,7 +337,7 @@ class TestCleanupStaleMonitors:
 
     def test_cleanup_destroys_old_paused(self):
         """Deve destruir monitores pausados há muito tempo."""
-        from shared.intent.monitor_orchestrator import (
+        from intelligence.monitor_orchestrator import (
             MonitorOrchestrator,
             PAUSE_DAYS_BEFORE_DESTROY,
         )
@@ -356,7 +356,7 @@ class TestCleanupStaleMonitors:
 
     def test_cleanup_keeps_recent_paused(self):
         """Não deve destruir monitores pausados recentemente."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         
@@ -369,7 +369,7 @@ class TestCleanupStaleMonitors:
 
     def test_cleanup_keeps_high_relevance(self):
         """Não deve destruir mesmo velhos se relevância é alta."""
-        from shared.intent.monitor_orchestrator import (
+        from intelligence.monitor_orchestrator import (
             MonitorOrchestrator,
             PAUSE_DAYS_BEFORE_DESTROY,
             RELEVANCE_THRESHOLD_PAUSE,
@@ -395,7 +395,7 @@ class TestGetStats:
 
     def test_stats_empty(self):
         """Deve retornar stats vazios."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         stats = orchestrator.get_stats()
@@ -406,7 +406,7 @@ class TestGetStats:
 
     def test_stats_with_monitors(self):
         """Deve retornar stats corretos."""
-        from shared.intent.monitor_orchestrator import (
+        from intelligence.monitor_orchestrator import (
             MonitorOrchestrator,
             RELEVANCE_THRESHOLD_CREATE,
         )
@@ -428,7 +428,7 @@ class TestLifecycleLog:
 
     def test_log_creates_entry(self):
         """Deve criar entrada no log ao criar monitor."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.create_monitor("financial", "finance", {})
@@ -439,7 +439,7 @@ class TestLifecycleLog:
 
     def test_log_multiple_events(self):
         """Deve registrar múltiplos eventos."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.create_monitor("financial", "finance", {})
@@ -453,7 +453,7 @@ class TestLifecycleLog:
 
     def test_log_is_copy(self):
         """Deve retornar cópia do log, não referência."""
-        from shared.intent.monitor_orchestrator import MonitorOrchestrator
+        from intelligence.monitor_orchestrator import MonitorOrchestrator
         
         orchestrator = MonitorOrchestrator()
         orchestrator.create_monitor("financial", "finance", {})
@@ -464,3 +464,4 @@ class TestLifecycleLog:
         log1.append({"fake": "entry"})
         
         assert len(log2) == 1
+

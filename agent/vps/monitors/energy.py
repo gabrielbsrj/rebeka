@@ -33,7 +33,7 @@ from datetime import datetime, timedelta
 
 import httpx
 
-from shared.database.causal_bank import CausalBank
+from memory.causal_bank import CausalBank
 from vps.monitors.base_monitor import BaseMonitor
 
 logger = logging.getLogger(__name__)
@@ -265,3 +265,4 @@ class EnergyMonitor(BaseMonitor):
             "relevance_score": relevance,
             "metadata": {"url": news_item.get("url")}
         }
+

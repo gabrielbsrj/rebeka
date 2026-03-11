@@ -3,9 +3,9 @@ import asyncio
 import os
 from typing import Dict, Any
 
-from shared.core.planner import Planner
-from shared.core.evaluator import Evaluator
-from shared.core.security_phase1 import SecurityPhase1
+from core.planner import Planner
+from core.evaluator import Evaluator
+from core.security_phase1 import SecurityPhase1
 from vps.executor_financial import FinancialExecutor
 
 logger = logging.getLogger(__name__)
@@ -121,3 +121,4 @@ class PolymarketStrategist:
                 self.chat_manager.push_insight(f"❌ Erro na execução simulada: {str(e)}")
         else:
             logger.info("Trade ignorado: Reprovado pelo Avaliador ou decisão do Planner foi de não entrar.")
+

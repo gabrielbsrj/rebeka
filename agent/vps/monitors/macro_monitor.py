@@ -17,7 +17,7 @@ import random
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
-from shared.database.causal_bank import CausalBank
+from memory.causal_bank import CausalBank
 from vps.monitors.base_monitor import BaseMonitor
 
 logger = logging.getLogger(__name__)
@@ -109,3 +109,4 @@ class MacroMonitor(BaseMonitor):
                 "is_simulated": raw_item["is_simulated"]
             }
         }
+

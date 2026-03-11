@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from shared.database.causal_bank import CausalBank
-from shared.intent.intent_engine import IntentEngine
+from memory.causal_bank import CausalBank
+from intelligence.intent_engine import IntentEngine
 
 @pytest.fixture
 def test_bank():
@@ -84,3 +84,4 @@ def test_get_next_action(mock_apply, mock_check, engine):
     assert action is not None
     assert action["type"] == "friction"
     assert "message" in action["data"]
+

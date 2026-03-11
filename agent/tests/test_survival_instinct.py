@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 # Adiciona a raiz do projeto ao PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from shared.database.causal_bank import CausalBank
-from shared.communication.chat_manager import ChatManager
+from memory.causal_bank import CausalBank
+from interfaces.chat_manager import ChatManager
 from vps.services.proactive_insight import ProactiveInsightService
 from vps.monitors.survival_monitor import SurvivalMonitor
 
@@ -56,3 +56,4 @@ async def test_survival_flow():
 
 if __name__ == "__main__":
     asyncio.run(test_survival_flow())
+

@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from vps.monitors.financial_monitor import FinancialMonitor
 from vps.monitors.macro_monitor import MacroMonitor
-from shared.database.causal_bank import CausalBank
+from memory.causal_bank import CausalBank
 
 # Configurar logs
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -50,3 +50,4 @@ async def test_monitors():
 
 if __name__ == "__main__":
     asyncio.run(test_monitors())
+
