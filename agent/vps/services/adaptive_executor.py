@@ -88,6 +88,9 @@ class AdaptiveExecutorService:
         result = message.get("result", {}) or {}
         correlation_key = self._make_tool_correlation(tool_name, result)
         pending = self._pending_tool_dispatches.pop(correlation_key, None)
+        if not pending and isinstance(result, dict) and result.get("query"):
+            legacy_key = f"{tool_name}:{result['query'].strip().lower()}"
+            pending = self._pending_tool_dispatches.pop(legacy_key, None)
         if not pending:
             return None
 
@@ -141,6 +144,8 @@ class AdaptiveExecutorService:
         }
 
         self.persist_feedback(feedback)
+        if tool_name == "whatsapp_send_message":
+            self._persist_transparency_audit(pending, result)
         self.chat_manager.push_insight(
             f"Resultado operacional vinculado a '{pending['title']}': {summary}"
         )
@@ -177,17 +182,21 @@ class AdaptiveExecutorService:
         timestamp = datetime.now(timezone.utc).isoformat()
 
         if packet["dispatch_kind"] == "tool":
-            correlation_key = self._make_tool_correlation(packet["tool_name"], packet["arguments"])
+            correlation_id = self._build_action_key(plan, action)
+            packet_arguments = dict(packet.get("arguments") or {})
+            packet_arguments.setdefault("correlation_id", correlation_id)
+            packet["arguments"] = packet_arguments
+            correlation_key = self._make_tool_correlation(packet["tool_name"], packet_arguments)
             self._pending_tool_dispatches[correlation_key] = {
                 "focus_id": action["focus_id"],
                 "title": action["title"],
                 "plan_signature": plan["signature"],
                 "tool_name": packet["tool_name"],
-                "arguments": packet["arguments"],
+                "arguments": packet_arguments,
                 "executor_id": action.get("executor_id"),
                 "recommended_action": action.get("recommended_action"),
             }
-            await self.dispatcher.dispatch_tool(packet["tool_name"], packet["arguments"])
+            await self.dispatcher.dispatch_tool(packet["tool_name"], packet_arguments)
             status = "dispatched"
         elif packet["dispatch_kind"] == "chat":
             self.chat_manager.push_insight(packet["brief"])
@@ -204,6 +213,8 @@ class AdaptiveExecutorService:
             episode["budget_tier"] = action.get("budget_tier")
             episode["tool_budget_eligible"] = action.get("tool_budget_eligible")
             episode["policy_decision"] = action.get("policy_decision")
+            if action.get("guardrail_flags"):
+                episode["guardrail_flags"] = list(action["guardrail_flags"])
             episode["last_dispatched_at"] = timestamp
 
             if action.get("kind") == "feedback_follow_up":
@@ -231,6 +242,8 @@ class AdaptiveExecutorService:
             "tool_budget_eligible": action.get("tool_budget_eligible"),
             "policy_decision": action.get("policy_decision"),
         }
+        if action.get("guardrail_flags"):
+            execution["guardrail_flags"] = list(action["guardrail_flags"])
         if action.get("source"):
             execution["source"] = action["source"]
         if action.get("action_id"):
@@ -258,6 +271,7 @@ class AdaptiveExecutorService:
                             "budget_tier": execution.get("budget_tier"),
                             "tool_budget_eligible": execution.get("tool_budget_eligible"),
                             "policy_decision": execution.get("policy_decision"),
+                            "guardrail_flags": execution.get("guardrail_flags"),
                             "source": execution.get("source"),
                             "action_id": execution.get("action_id"),
                         },
@@ -340,6 +354,27 @@ class AdaptiveExecutorService:
         except Exception as exc:
             logger.error(f"Erro ao persistir follow-up adaptativo: {exc}")
 
+    def _persist_transparency_audit(self, pending: Dict[str, Any], result: Dict[str, Any]) -> None:
+        if not isinstance(result, dict) or not result.get("guardrail_applied"):
+            return
+        try:
+            self.bank.insert_system_event(
+                {
+                    "event_type": "whatsapp_transparency_applied",
+                    "description": "Identificacao automatica aplicada antes de enviar mensagem.",
+                    "context": {
+                        "focus_id": pending.get("focus_id"),
+                        "plan_signature": pending.get("plan_signature"),
+                        "executor_id": pending.get("executor_id"),
+                        "contact_name": result.get("contact_name"),
+                        "identification_message": result.get("identification_message"),
+                        "correlation_id": result.get("correlation_id"),
+                    },
+                }
+            )
+        except Exception as exc:
+            logger.error(f"Erro ao persistir auditoria de transparencia: {exc}")
+
     def persist_feedback(self, feedback: Dict[str, Any]) -> None:
         try:
             self.bank.insert_system_event(
@@ -396,10 +431,32 @@ class AdaptiveExecutorService:
                 "brief": f"Acao '{action['title']}' requer validacao antes de autoexecucao.",
             }
 
-        if policy_decision == "guided_execute" and recommended_action in self.TOOL_BACKED_ACTIONS:
+        if policy_decision == "guided_execute" and (
+            recommended_action in self.TOOL_BACKED_ACTIONS or action.get("tool_name")
+        ):
             return {
                 "dispatch_kind": "chat",
                 "brief": f"Acao guiada para '{action['title']}': {action.get('policy_reason', 'conducao assistida neste ciclo')}.",
+            }
+
+        custom_tool = action.get("tool_name")
+        if custom_tool:
+            arguments = action.get("tool_arguments") or action.get("tool_payload") or action.get("arguments") or {}
+            if not isinstance(arguments, dict):
+                arguments = {"payload": arguments}
+            if action.get("tool_budget_eligible") and not tool_budget_available:
+                return {
+                    "dispatch_kind": "queue",
+                    "brief": (
+                        f"Acao '{action['title']}' mantida em fila por orcamento {action.get('budget_tier', 'restrito')} "
+                        f"no modo {plan['mode']}."
+                    ),
+                }
+            return {
+                "dispatch_kind": "tool",
+                "tool_name": custom_tool,
+                "arguments": arguments,
+                "brief": f"Despachando {custom_tool} para '{action['title']}' em modo {plan['mode']}.",
             }
 
         if recommended_action in self.TOOL_BACKED_ACTIONS and not action.get("tool_budget_eligible", True):
@@ -553,6 +610,8 @@ class AdaptiveExecutorService:
     def _make_tool_correlation(self, tool_name: Optional[str], payload: Any) -> str:
         if isinstance(payload, dict) and payload.get("query"):
             return f"{tool_name}:{payload['query'].strip().lower()}"
+        if isinstance(payload, dict) and payload.get("correlation_id"):
+            return f"{tool_name}:{payload['correlation_id']}"
         normalized = json.dumps(payload or {}, sort_keys=True, default=str)
         return f"{tool_name}:{normalized}"
 

@@ -3,6 +3,7 @@ import hashlib
 import inspect
 import json
 import logging
+import os
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Dict, Iterable, List, Optional
@@ -87,6 +88,7 @@ class GlobalWorkspaceService:
         check_interval: int = 300,
         top_n: int = 5,
         tracked_domains: Optional[List[str]] = None,
+        communication_min_relevance: Optional[float] = None,
     ):
         self.bank = bank
         self.chat_manager = chat_manager
@@ -101,10 +103,18 @@ class GlobalWorkspaceService:
             "energy",
             "innovation",
             "corporate",
+            "communication",
         ]
         self._last_signature: Optional[str] = None
         self._snapshot_consumers: List[Callable[[Dict[str, Any]], Any]] = []
         self.is_running = False
+        if communication_min_relevance is None:
+            raw_value = os.getenv("REBEKA_COMM_MIN_RELEVANCE", "0.6")
+            try:
+                communication_min_relevance = float(raw_value)
+            except ValueError:
+                communication_min_relevance = 0.6
+        self.communication_min_relevance = communication_min_relevance
 
     async def start(self):
         self.is_running = True
@@ -151,18 +161,20 @@ class GlobalWorkspaceService:
         growth_targets = self.bank.get_active_growth_targets()
         conversation_signals = self.bank.get_recent_conversation_signals(days=7, limit=20)
         world_signals = self._collect_world_signals()
+        behavioral_patterns = self._collect_behavioral_patterns()
 
         focuses: List[FocusItem] = []
-        focuses.extend(
-            self._focus_from_signal(signal, growth_targets, conversation_signals)
-            for signal in world_signals
-        )
+        for signal in world_signals:
+            focus = self._focus_from_signal(signal, growth_targets, conversation_signals)
+            if focus is not None:
+                focuses.append(focus)
         focuses.extend(self._focus_from_growth_target(target, conversation_signals) for target in growth_targets)
         focuses.extend(
             self._focus_from_conversation_signal(signal)
             for signal in conversation_signals
             if self._conversation_has_active_tension(signal)
         )
+        focuses.extend(self._focus_from_behavioral_pattern(pattern) for pattern in behavioral_patterns)
 
         ranked_focuses = self._deduplicate_focuses(focuses)
         ranked_focuses.sort(key=lambda item: item.priority, reverse=True)
@@ -214,12 +226,51 @@ class GlobalWorkspaceService:
                 logger.error(f"Erro ao coletar sinais do dominio {domain}: {exc}")
         return signals
 
+    def _collect_behavioral_patterns(self) -> List[Dict[str, Any]]:
+        try:
+            patterns = self.bank.get_behavioral_patterns(domain="communication", min_confidence=0.6)
+            return self._filter_active_patterns(patterns)
+        except Exception as exc:
+            logger.error(f"Erro ao coletar behavioral patterns: {exc}")
+            return []
+
+    def _filter_active_patterns(
+        self,
+        patterns: List[Dict[str, Any]],
+        now: Optional[datetime] = None,
+    ) -> List[Dict[str, Any]]:
+        ttl_raw = os.getenv("REBEKA_BEHAVIORAL_PATTERN_TTL_HOURS", "72")
+        try:
+            ttl_hours = int(ttl_raw)
+        except ValueError:
+            ttl_hours = 72
+
+        now = now or datetime.now(timezone.utc)
+        cutoff = now - timedelta(hours=ttl_hours)
+        active: List[Dict[str, Any]] = []
+
+        for pattern in patterns:
+            last_detected_raw = pattern.get("last_detected")
+            if not last_detected_raw:
+                active.append(pattern)
+                continue
+            try:
+                last_detected = datetime.fromisoformat(str(last_detected_raw).replace("Z", "+00:00"))
+                if last_detected.tzinfo is None:
+                    last_detected = last_detected.replace(tzinfo=timezone.utc)
+                if last_detected >= cutoff:
+                    active.append(pattern)
+            except (ValueError, TypeError):
+                active.append(pattern)
+
+        return active
+
     def _focus_from_signal(
         self,
         signal: Dict[str, Any],
         growth_targets: List[Dict[str, Any]],
         conversation_signals: List[Dict[str, Any]],
-    ) -> FocusItem:
+    ) -> Optional[FocusItem]:
         signal_text = f"{signal.get('title', '')} {signal.get('content', '')}".lower()
         domain = signal.get("domain", "unknown")
         base_relevance = float(signal.get("relevance_score", 0.0))
@@ -228,6 +279,14 @@ class GlobalWorkspaceService:
         recency_bonus = self._recency_bonus(signal.get("created_at"))
         target_bonus = 0.08 if any(target.get("domain") == domain for target in growth_targets) else 0.0
         tension_bonus = 0.08 if self._signal_touches_user_tension(signal_text, conversation_signals) else 0.0
+
+        if (
+            domain == "communication"
+            and base_relevance < self.communication_min_relevance
+            and urgent_bonus == 0.0
+            and tension_bonus == 0.0
+        ):
+            return None
 
         priority = min(
             1.0,
@@ -271,19 +330,28 @@ class GlobalWorkspaceService:
         )
 
     def _focus_from_conversation_signal(self, signal: Dict[str, Any]) -> FocusItem:
-        behavioral = signal.get("behavioral_patterns", {}) or {}
+        behavioral = signal.get("behavioral_patterns") or signal.get("behavioral") or {}
         problems = behavioral.get("problemas_ativos", []) or []
         interests = behavioral.get("interesses", []) or []
-        emotional_state = signal.get("emotional_state_inferred", "neutro")
+        emotional_state = signal.get("emotional_state_inferred") or signal.get("emotional") or "neutro"
         friction = signal.get("friction_potential", {}) or {}
         friction_level = 0.05 * len(friction) if isinstance(friction, dict) else 0.0
+        values = signal.get("values_revealed") or []
+        external_events = signal.get("external_events") or {}
+        values_bonus = 0.04 if values else 0.0
+        external_summary = external_events.get("summary") if isinstance(external_events, dict) else None
+        external_bonus = 0.02 if external_summary else 0.0
 
-        priority = min(1.0, 0.66 + (0.06 * len(problems)) + friction_level)
+        priority = min(1.0, 0.66 + (0.06 * len(problems)) + friction_level + values_bonus + external_bonus)
         summary_bits = []
         if problems:
             summary_bits.append("Problemas ativos: " + ", ".join(problems[:3]))
         if interests:
             summary_bits.append("Interesses: " + ", ".join(interests[:3]))
+        if values:
+            summary_bits.append("Valores percebidos: " + ", ".join(values[:3]))
+        if external_summary:
+            summary_bits.append("Contexto recente: " + self._truncate(str(external_summary), 120))
         summary_bits.append(f"Estado emocional inferido: {emotional_state}")
 
         return FocusItem(
@@ -296,6 +364,29 @@ class GlobalWorkspaceService:
             recommended_action="follow_up",
             source_ids=[signal.get("id")] if signal.get("id") else [],
             confidence=0.68,
+        )
+
+    def _focus_from_behavioral_pattern(self, pattern: Dict[str, Any]) -> FocusItem:
+        domain = pattern.get("domain") or "communication"
+        confidence = float(pattern.get("confidence", 0.5))
+        base = 0.62 + (confidence * 0.18)
+        if pattern.get("potentially_limiting"):
+            base += 0.06
+        priority = min(1.0, base)
+        title = pattern.get("description") or f"Padrao recorrente: {pattern.get('type', 'comportamento')}"
+        summary = self._truncate(title, 160)
+        recommended_action = "follow_up" if domain == "communication" else "plan"
+
+        return FocusItem(
+            focus_id=self._stable_id("behavioral_pattern", domain, pattern.get("id", title)),
+            kind="behavioral_pattern",
+            domain=domain,
+            title=title,
+            summary=summary,
+            priority=priority,
+            recommended_action=recommended_action,
+            source_ids=[pattern.get("id")] if pattern.get("id") else [],
+            confidence=confidence,
         )
 
     def _deduplicate_focuses(self, focuses: Iterable[FocusItem]) -> List[FocusItem]:

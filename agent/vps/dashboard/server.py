@@ -21,13 +21,17 @@ from core.config_loader import (
     is_onboarding_completed,
     complete_onboarding
 )
-from local.executor_local import LocalExecutor
+
+try:
+    from local.executor_local import LocalExecutor
+except ImportError:
+    LocalExecutor = None
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Rebeka Dashboard Backend")
 chat_manager = ChatManager() # Deixa carregar o modelo do config
-executor = LocalExecutor()
+executor = LocalExecutor() if LocalExecutor else None
 
 # Montar diretório de estáticos para servir o feed do browser
 static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -86,8 +90,11 @@ async def chat_endpoint(request: ChatRequest):
                     args = json.loads(tool_call.function.arguments)
                     logger.info(f"Executando {tool_name} pela Rebeka... (iteração {iterations})")
                     
-                    # Execução REAL via LocalExecutor
-                    result = await executor.execute(tool_name, args)
+                    # Execução REAL via LocalExecutor se disponível
+                    if executor:
+                        result = await executor.execute(tool_name, args)
+                    else:
+                        result = {"status": "error", "message": "Execução de ferramentas não suportada neste ambiente VPS."}
                     chat_manager.add_tool_result(tool_call.id, tool_name, json.dumps(result))
                     action_logs.append(f"EXEC: {tool_name}")
                 except Exception as e:

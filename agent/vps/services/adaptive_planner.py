@@ -791,6 +791,11 @@ class AdaptivePlannerService:
         registry_domains = learning_registry.get("domains") or {}
         registry_executors = learning_registry.get("executors") or {}
         registry_tools = learning_registry.get("tools") or {}
+        behavioral_domains = {
+            action.get("domain")
+            for action in agenda
+            if action.get("kind") == "behavioral_pattern"
+        }
 
         for action in agenda:
             enriched = dict(action)
@@ -800,13 +805,14 @@ class AdaptivePlannerService:
             enriched["domain_learning_quality"] = domain_data.get("quality_score")
             enriched["executor_learning_pattern"] = executor_data.get("pattern")
             enriched["executor_learning_quality"] = executor_data.get("quality_score")
+            enriched["behavioral_pressure"] = action.get("domain") in behavioral_domains
             tool_name = self._tool_name_for_action(enriched)
             if tool_name:
                 tool_data = registry_tools.get(tool_name) or {}
                 enriched["tool_name"] = tool_name
                 enriched["tool_learning_pattern"] = tool_data.get("pattern")
                 enriched["tool_learning_quality"] = tool_data.get("quality_score")
-            enriched["tool_budget_weight"] = self._tune_tool_budget_weight(enriched)
+            enriched["tool_budget_weight"] = self._tune_tool_budget_weight(enriched, behavioral_domains)
 
             executor_id, executor_policy = self._select_executor_with_learning(enriched)
             if executor_id != enriched["executor_id"]:
@@ -817,7 +823,7 @@ class AdaptivePlannerService:
             updated.append(enriched)
         return updated
 
-    def _tune_tool_budget_weight(self, action: Dict[str, Any]) -> float:
+    def _tune_tool_budget_weight(self, action: Dict[str, Any], behavioral_domains: Optional[set] = None) -> float:
         weight = float(action.get("tool_budget_weight", 0.0))
         if not action.get("tool_budget_eligible"):
             return round(weight, 2)
@@ -844,6 +850,10 @@ class AdaptivePlannerService:
             weight -= 0.08
         elif tool_pattern == "scope_fragile":
             weight -= 0.12
+
+        if behavioral_domains and action.get("domain") in behavioral_domains:
+            if domain_pattern in {"evidence_weak", "scope_fragile"}:
+                weight -= 0.12
 
         return round(min(1.0, max(0.1, weight)), 2)
 
@@ -899,6 +909,7 @@ class AdaptivePlannerService:
         verdicts = {item.get("strategy_verdict") for item in agenda if item.get("strategy_verdict")}
         high_confidence_domains = [value for value in domain_confidence.values() if value >= 0.75]
         learning_pattern = learning_registry.get("global_pattern")
+        behavioral_pressure = self._behavioral_pressure(agenda, learning_registry)
         fragile_histories = any(
             item.get("executor_learning_pattern") in {"evidence_weak", "scope_fragile"}
             or item.get("domain_learning_pattern") in {"evidence_weak", "scope_fragile"}
@@ -910,20 +921,44 @@ class AdaptivePlannerService:
             return "protective"
         if learning_pattern in {"evidence_weak", "scope_fragile"} and fragile_histories:
             return "skeptical"
+        if behavioral_pressure and fragile_histories:
+            return "skeptical"
         if "blocked_execution" in verdicts or "insufficient_evidence" in verdicts:
             return "guarded"
         if budget.get("tool_dispatch_limit", 0) >= 2 and high_confidence_domains:
             return "assertive"
         return "measured"
 
+    def _behavioral_pressure(
+        self,
+        agenda: List[Dict[str, Any]],
+        learning_registry: Dict[str, Any],
+    ) -> bool:
+        behavioral_domains = {
+            action.get("domain")
+            for action in agenda
+            if action.get("kind") == "behavioral_pattern"
+        }
+        if not behavioral_domains:
+            return False
+        registry_domains = learning_registry.get("domains") or {}
+        for domain in behavioral_domains:
+            pattern = (registry_domains.get(domain) or {}).get("pattern")
+            if pattern in {"evidence_weak", "scope_fragile"}:
+                return True
+        return False
+
     def _apply_policy_layer(self, agenda: List[Dict[str, Any]], self_model: Dict[str, Any]) -> List[Dict[str, Any]]:
         updated = []
         for action in agenda:
-            decision, reason = self._policy_decision(action, self_model)
+            guardrail_flags = self._guardrail_flags(action)
+            decision, reason = self._policy_decision(action, self_model, guardrail_flags)
             enriched = dict(action)
             enriched["policy_decision"] = decision
             enriched["policy_reason"] = reason
             enriched["auto_execute"] = decision == "auto_execute"
+            if guardrail_flags:
+                enriched["guardrail_flags"] = guardrail_flags
             updated.append(enriched)
         return updated
 
@@ -949,13 +984,23 @@ class AdaptivePlannerService:
             "summary": summary,
         }
 
-    def _policy_decision(self, action: Dict[str, Any], self_model: Dict[str, Any]) -> tuple[str, str]:
+    def _policy_decision(
+        self,
+        action: Dict[str, Any],
+        self_model: Dict[str, Any],
+        guardrail_flags: Optional[List[str]] = None,
+    ) -> tuple[str, str]:
         if action.get("horizon") == "watch":
             return "defer", "frente mantida em observacao"
+        guardrail_decision = self._guardrail_decision(action, guardrail_flags or [])
+        if guardrail_decision is not None:
+            return guardrail_decision
         if action.get("budget_tier") == "validate" or action.get("strategy_verdict") == "insufficient_evidence":
             return "needs_validation", "evidencia insuficiente para autoexecucao"
         if action.get("strategy_verdict") == "blocked_execution":
             return "guided_execute", "bloqueio pede escopo guiado antes de escalar"
+        if action.get("behavioral_pressure") and action.get("domain_learning_pattern") in {"evidence_weak", "scope_fragile"}:
+            return "guided_execute", "pressao comportamental em dominio fragil exige conducao guiada"
         if self_model.get("autonomy_posture") == "skeptical" and action.get("tool_budget_eligible"):
             if action.get("executor_learning_pattern") == "scope_fragile" or action.get("domain_learning_pattern") == "scope_fragile":
                 return "guided_execute", "historico multi-ciclo indica escopo fragil"
@@ -969,6 +1014,47 @@ class AdaptivePlannerService:
         if action.get("tool_budget_eligible") and action.get("horizon") == "now":
             return "auto_execute", "acao imediata com orcamento e confianca suficientes"
         return "guided_execute", "manter conducao guiada neste ciclo"
+
+    def _guardrail_flags(self, action: Dict[str, Any]) -> List[str]:
+        text = " ".join(
+            part
+            for part in (
+                action.get("title"),
+                action.get("summary"),
+                action.get("instruction"),
+                action.get("rationale"),
+            )
+            if part
+        ).lower()
+        flags = []
+        payment_terms = {
+            "pagar",
+            "pagamento",
+            "pix",
+            "transferir",
+            "transferencia",
+            "boleto",
+            "cartao",
+            "compra",
+            "comprar",
+            "venda",
+            "vender",
+            "investir",
+            "aplicar",
+        }
+        market_terms = {"trade", "operar", "operacao", "buy", "sell"}
+        if any(term in text for term in payment_terms):
+            flags.append("payment_operation")
+        if action.get("domain") in {"finance", "trading", "crypto"} and any(term in text for term in market_terms):
+            flags.append("market_operation")
+        return flags
+
+    def _guardrail_decision(self, action: Dict[str, Any], guardrail_flags: List[str]) -> Optional[tuple[str, str]]:
+        if "payment_operation" in guardrail_flags:
+            return "needs_validation", "guardrail: operacao financeira exige aprovacao"
+        if "market_operation" in guardrail_flags:
+            return "needs_validation", "guardrail: operacao de mercado exige aprovacao"
+        return None
 
     def _select_mode(self, focuses: List[Dict[str, Any]]) -> str:
         if not focuses:

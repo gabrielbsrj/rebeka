@@ -387,3 +387,262 @@ async def test_sync_server_notifies_tool_result_consumers_and_posts_report():
     assert consumed[0]["tool_name"] == "perplexity_search"
     assert any("Deep Research" in insight and "Tema X" in insight for insight in chat.insights)
     sync_server.clear_tool_result_consumers()
+
+
+@pytest.mark.asyncio
+async def test_sync_server_persists_context_sync_signal():
+    class FakeSignalBank:
+        def __init__(self):
+            self.signals = []
+            self.conversation_signals = []
+
+        def insert_signal(self, signal):
+            self.signals.append(dict(signal))
+            return "sig-1"
+
+        def insert_conversation_signal(self, signal):
+            self.conversation_signals.append(dict(signal))
+            return "conv-1"
+
+    bank = FakeSignalBank()
+    sync_server._causal_bank = bank
+
+    mock_ws = AsyncMock()
+    mock_ws.receive_text.side_effect = [
+        json.dumps(
+            {
+                "type": "context_sync",
+                "priority": "normal",
+                "data": {
+                    "active_app": "WhatsApp",
+                    "context_category": "communication",
+                    "privacy_level": "abstracted",
+                },
+            }
+        ),
+        Exception("exit"),
+    ]
+
+    try:
+        await sync_server.websocket_endpoint(mock_ws)
+    except Exception:
+        pass
+
+    assert len(bank.signals) == 1
+    assert bank.signals[0]["domain"] == "communication"
+    assert "WhatsApp" in bank.signals[0]["title"]
+    assert bank.conversation_signals == []
+    sync_server._causal_bank = None
+
+
+@pytest.mark.asyncio
+async def test_sync_server_promotes_relevant_communication_to_conversation_signal():
+    class FakeSignalBank:
+        def __init__(self):
+            self.signals = []
+            self.conversation_signals = []
+
+        def insert_signal(self, signal):
+            self.signals.append(dict(signal))
+            return "sig-1"
+
+        def insert_conversation_signal(self, signal):
+            self.conversation_signals.append(dict(signal))
+            return "conv-1"
+
+    bank = FakeSignalBank()
+    sync_server._causal_bank = bank
+
+    mock_ws = AsyncMock()
+    mock_ws.receive_text.side_effect = [
+        json.dumps(
+            {
+                "type": "context_sync",
+                "priority": "high",
+                "data": {
+                    "active_app": "WhatsApp",
+                    "context_category": "communication",
+                    "relevance_score": 0.85,
+                },
+            }
+        ),
+        Exception("exit"),
+    ]
+
+    try:
+        await sync_server.websocket_endpoint(mock_ws)
+    except Exception:
+        pass
+
+    assert len(bank.signals) == 1
+    assert len(bank.conversation_signals) == 1
+    assert bank.conversation_signals[0]["conversation_id"]
+    assert bank.conversation_signals[0]["external_events"]["summary"]
+    sync_server._causal_bank = None
+
+
+@pytest.mark.asyncio
+async def test_sync_server_dedupes_context_signature():
+    class FakeSignalBank:
+        def __init__(self):
+            self.signals = []
+
+        def insert_signal(self, signal):
+            self.signals.append(dict(signal))
+            return "sig-1"
+
+        def insert_conversation_signal(self, signal):
+            return "conv-1"
+
+    bank = FakeSignalBank()
+    sync_server._causal_bank = bank
+    sync_server._recent_context_signatures = {}
+
+    message = {
+        "type": "context_sync",
+        "priority": "normal",
+        "data": {
+            "active_app": "WhatsApp",
+            "context_category": "communication",
+            "context_signature": "abc123",
+            "relevance_score": 0.8,
+        },
+    }
+
+    await sync_server._handle_context_sync(message)
+    await sync_server._handle_context_sync(message)
+
+    assert len(bank.signals) == 1
+    sync_server._causal_bank = None
+    sync_server._recent_context_signatures = {}
+
+
+@pytest.mark.asyncio
+async def test_sync_server_registers_growth_target_from_values():
+    class FakeSignalBank:
+        def __init__(self):
+            self.signals = []
+            self.conversation_signals = []
+            self.growth_targets = []
+
+        def insert_signal(self, signal):
+            self.signals.append(dict(signal))
+            return "sig-1"
+
+        def insert_conversation_signal(self, signal):
+            self.conversation_signals.append(dict(signal))
+            return "conv-1"
+
+        def get_active_growth_targets(self, domain=None):
+            if domain:
+                return [t for t in self.growth_targets if t.get("domain") == domain]
+            return list(self.growth_targets)
+
+        def insert_growth_target(self, target):
+            self.growth_targets.append(dict(target))
+            return "gt-1"
+
+    bank = FakeSignalBank()
+    sync_server._causal_bank = bank
+
+    mock_ws = AsyncMock()
+    mock_ws.receive_text.side_effect = [
+        json.dumps(
+            {
+                "type": "context_sync",
+                "priority": "high",
+                "data": {
+                    "active_app": "WhatsApp",
+                    "context_category": "communication",
+                    "relevance_score": 0.9,
+                    "content": "Preciso resolver o controle financeiro hoje.",
+                },
+            }
+        ),
+        Exception("exit"),
+    ]
+
+    try:
+        await sync_server.websocket_endpoint(mock_ws)
+    except Exception:
+        pass
+
+    assert len(bank.growth_targets) == 1
+    assert bank.growth_targets[0]["domain"] == "finance"
+    sync_server._causal_bank = None
+
+
+@pytest.mark.asyncio
+async def test_sync_server_registers_behavioral_pattern_from_repeated_friction():
+    class FakeSignalBank:
+        def __init__(self):
+            self.signals = []
+            self.conversation_signals = []
+            self.behavioral_patterns = []
+
+        def insert_signal(self, signal):
+            self.signals.append(dict(signal))
+            return "sig-1"
+
+        def insert_conversation_signal(self, signal):
+            self.conversation_signals.append(dict(signal))
+            return "conv-1"
+
+        def get_recent_conversation_signals(self, days=3, limit=50):
+            return list(self.conversation_signals)[:limit]
+
+        def get_behavioral_patterns(self, domain=None, min_confidence=0.3):
+            if domain:
+                return [p for p in self.behavioral_patterns if p.get("domain") == domain]
+            return list(self.behavioral_patterns)
+
+        def insert_behavioral_pattern(self, pattern):
+            self.behavioral_patterns.append(dict(pattern))
+            return "bp-1"
+
+        def append_behavioral_evidence(self, pattern_id, evidence):
+            return "bp-2"
+
+    import os
+    bank = FakeSignalBank()
+    sync_server._causal_bank = bank
+
+    old_count = os.environ.get("REBEKA_COMM_PATTERN_MIN_COUNT")
+    old_threshold = os.environ.get("REBEKA_COMM_PATTERN_SCORE_THRESHOLD")
+    os.environ["REBEKA_COMM_PATTERN_MIN_COUNT"] = "1"
+    os.environ["REBEKA_COMM_PATTERN_SCORE_THRESHOLD"] = "0.5"
+
+    mock_ws = AsyncMock()
+    mock_ws.receive_text.side_effect = [
+        json.dumps(
+            {
+                "type": "context_sync",
+                "priority": "high",
+                "data": {
+                    "active_app": "WhatsApp",
+                    "context_category": "communication",
+                    "relevance_score": 0.9,
+                    "content": "Mensagem urgente sobre prazo.",
+                },
+            }
+        ),
+        Exception("exit"),
+    ]
+
+    try:
+        await sync_server.websocket_endpoint(mock_ws)
+    except Exception:
+        pass
+
+    if old_count is None:
+        os.environ.pop("REBEKA_COMM_PATTERN_MIN_COUNT", None)
+    else:
+        os.environ["REBEKA_COMM_PATTERN_MIN_COUNT"] = old_count
+    if old_threshold is None:
+        os.environ.pop("REBEKA_COMM_PATTERN_SCORE_THRESHOLD", None)
+    else:
+        os.environ["REBEKA_COMM_PATTERN_SCORE_THRESHOLD"] = old_threshold
+
+    assert len(bank.behavioral_patterns) == 1
+    assert bank.behavioral_patterns[0]["pattern_type"] == "communication_urgency"
+    sync_server._causal_bank = None

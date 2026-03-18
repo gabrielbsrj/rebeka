@@ -56,6 +56,8 @@ class SyncClient:
         """Executa a ferramenta e devolve o resultado para a VPS."""
         try:
             result = await self._executor.execute(tool_name, arguments)
+            if isinstance(result, dict) and arguments.get("correlation_id") and "correlation_id" not in result:
+                result["correlation_id"] = arguments.get("correlation_id")
             await self.send({
                 "type": "tool_result",
                 "tool_name": tool_name,

@@ -29,6 +29,16 @@ class LocalExecutor:
         self.context = None
         self.page = None
         self.vault = vault
+        self.whatsapp_adapter = None
+        self.sync_client = None
+
+    def register_whatsapp_adapter(self, adapter: Any) -> None:
+        """Registra o adaptador local do WhatsApp para envio seguro."""
+        self.whatsapp_adapter = adapter
+
+    def register_sync_client(self, client: Any) -> None:
+        """Registra o SyncClient para envio de sinais locais para a VPS."""
+        self.sync_client = client
 
     async def execute(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Orquestra a execução da ferramenta chamada."""
@@ -47,7 +57,7 @@ class LocalExecutor:
             elif tool_name == "run_terminal_command":
                 return self.run_terminal_command(arguments["command"])
             elif tool_name == "browser_navigate":
-                return await self.browser_search(arguments["query"])
+                return await self.browser_navigate(arguments["url"])
             elif tool_name == "desktop_click":
                 return self.desktop_click(arguments.get("x"), arguments.get("y"), arguments.get("element_text"))
             elif tool_name == "desktop_type_text":
@@ -83,6 +93,8 @@ class LocalExecutor:
                 return self.improve_whatsapp_system(arguments.get("folder_path"))
             elif tool_name == "add_whatsapp_monitoring":
                 return self.add_whatsapp_monitoring(arguments.get("folder_path"))
+            elif tool_name == "whatsapp_send_message":
+                return await self._send_whatsapp_message(arguments)
             elif tool_name == "request_antigravity_service":
                 return {
                     "status": "success",
@@ -123,6 +135,51 @@ class LocalExecutor:
         except Exception as e:
             logger.error(f"Erro ao executar {tool_name}: {str(e)}")
             return {"status": "error", "message": str(e)}
+
+    async def _send_whatsapp_message(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        contact_name = arguments.get("contact_name") or arguments.get("contact") or arguments.get("name")
+        message = arguments.get("message") or ""
+        if not contact_name:
+            return {"status": "error", "message": "contact_name obrigatorio para whatsapp_send_message"}
+        if not self.whatsapp_adapter:
+            return {"status": "error", "message": "WhatsApp adapter nao registrado no executor local."}
+        return await self.whatsapp_adapter.send_message(contact_name, message)
+
+    async def notify_vps(
+        self,
+        domain: str,
+        source: str,
+        title: str,
+        content: str,
+        relevance: float = 0.5,
+        raw_data: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        priority: str = "normal",
+    ) -> Dict[str, Any]:
+        """Envia um sinal abstrato do ambiente local para a VPS via SyncClient."""
+        if not self.sync_client:
+            logger.warning("Sync client nao registrado; notify_vps ignorado.")
+            return {"status": "error", "message": "Sync client nao registrado."}
+
+        payload: Dict[str, Any] = {
+            "type": "context_sync",
+            "priority": priority,
+            "data": {
+                "domain": domain,
+                "source": source,
+                "title": title,
+                "content": content,
+                "relevance_score": relevance,
+            },
+        }
+
+        if raw_data is not None:
+            payload["data"]["raw_data"] = raw_data
+        if metadata is not None:
+            payload["data"]["metadata"] = metadata
+
+        await self.sync_client.send(payload)
+        return {"status": "success", "message": "context_sync enviado para a VPS."}
 
     def run_remote_command(self, command: str) -> Dict[str, Any]:
         """Executa um comando na VPS remota via SSH."""
@@ -324,21 +381,62 @@ class LocalExecutor:
         """Navega para uma URL e fecha o browser em seguida para poupar recursos."""
         try:
             playwright = await async_playwright().start()
-            browser = await playwright.chromium.launch(headless=False)
+            browser = await playwright.chromium.launch(headless=True)  # Mais rápido
             context = await browser.new_context()
             page = await context.new_page()
-            await page.goto(url)
+            await page.goto(url, timeout=15000)  # Timeout menor
             title = await page.title()
             await browser.close()
             await playwright.stop()
-            return {"status": "success", "current_url": url, "title": title, "message": "Navegação concluída e browser fechado."}
+            return {"status": "success", "current_url": url, "title": title, "message": "Navegação concluída."}
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
     async def browser_search(self, query: str) -> Dict[str, Any]:
-        """Pesquisa no Google e fecha o browser."""
-        search_url = f"https://www.google.com/search?q={query}"
-        return await self.browser_navigate(search_url)
+        """Pesquisa no Bing e retorna os resultados."""
+        try:
+            import urllib.parse
+            encoded_query = urllib.parse.quote(query)
+            search_url = f"https://www.bing.com/search?q={encoded_query}&setlang=pt-BR"
+            
+            playwright = await async_playwright().start()
+            browser = await playwright.chromium.launch(
+                headless=True,
+                args=['--disable-blink-features=AutomationControlled']
+            )
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
+            page = await context.new_page()
+            
+            await page.goto(search_url, timeout=20000)
+            await page.wait_for_load_state('domcontentloaded')
+            await page.wait_for_timeout(2500)
+            
+            results = []
+            # Seletores do Bing
+            result_elements = await page.query_selector_all('.b_algo h2 a')
+            
+            for elem in result_elements[:10]:
+                try:
+                    title = await elem.inner_text()
+                    link = await elem.get_attribute('href')
+                    if title and link and link.startswith('http'):
+                        results.append({"title": title, "link": link, "snippet": ""})
+                except:
+                    continue
+            
+            await browser.close()
+            await playwright.stop()
+            
+            return {
+                "status": "success",
+                "query": query,
+                "results": results,
+                "count": len(results)
+            }
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
 
     def desktop_type_text(self, text: str, interval: float = 0.1) -> Dict[str, Any]:
         """Digita texto no teclado, resolvendo segredos do Vault no último milissegundo."""
@@ -591,7 +689,7 @@ class LocalExecutor:
             await self.page.fill(textarea_selector, query)
             await self.page.keyboard.press("Enter")
             
-            await asyncio.sleep(8) # Aumentar delay para geração
+            await asyncio.sleep(4)  # Reduzido de 8 para 4 segundos
             
             # 3. Capturar Resposta
             # O perplexity mudou seletores. Vamos tentar pegar a última resposta estruturada

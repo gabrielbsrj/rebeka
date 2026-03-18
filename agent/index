@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device=device-width, initial-scale=1.0">
+    <title>TechFront - Portal de IA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            padding: 3rem 0;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(repeat(auto);
+            gap: 2rem;
+            margin-top: 3rem 0;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h2 {
+            margin-bottom: 1rem;
+        }
+        .card p {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 TechFront</h1>
+            <p class="subtitle">Seu portal de conteúdo sobre IA, ferramentas de produtividade e achadinhos no Mercado Livre Chile</p>
+        </header>
+        
+        <div class="categories">
+            <div class="card">
+                <h2>🔮 Futuro da IA</h2>
+                <p>Artigos sobre tendências, ética e futuro da inteligência artificial</p>
+            </div>
+            
+            <div class="card">
+                <h2>⚡ Produtividade</h2>
+                <p>Dicas de ferramentas, atalhos e métodos para maximizar sua eficiência</p>
+            </div>
+            
+            <div class="card">
+                <h2>🛒 Achadinhos ML</h2>
+                <p>Os melhores produtos do Mercado Livre Chile com avaliação detalhada</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

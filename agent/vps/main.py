@@ -7,6 +7,7 @@ import logging
 import signal
 import sys
 import asyncio
+import os
 from memory.causal_bank import CausalBank
 from vps.sync_server import start_sync_server, register_tool_result_consumer
 from vps.monitors.social_media import SocialMediaMonitor
@@ -31,6 +32,22 @@ def main():
     """
     signal.signal(signal.SIGINT, handle_exit)
     signal.signal(signal.SIGTERM, handle_exit)
+
+    # 0. Conflict audit (hard gate unless explicitly bypassed)
+    try:
+        skip_audit = os.getenv("REBEKA_SKIP_CONFLICT_AUDIT", "").strip().lower() in {"1", "true", "yes"}
+        if not skip_audit:
+            from infrastructure.system_conflict_checker import SystemConflictChecker
+            checker = SystemConflictChecker()
+            report = checker.audit_on_startup()
+            if not report.get("safe_to_start", True):
+                logger.critical("Conflitos criticos detectados. Abortando bootstrap.")
+                return
+        else:
+            logger.warning("Conflict audit bypassed via REBEKA_SKIP_CONFLICT_AUDIT.")
+    except Exception as exc:
+        logger.critical(f"Falha no conflict audit: {exc}. Abortando bootstrap.")
+        return
 
     logger.info("Iniciando GÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªmeo VPS ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Perspectiva Global")
 
@@ -132,7 +149,7 @@ def main():
 
     # 6. Iniciar Sync Server (Bloqueante)
     try:
-        start_sync_server(host="0.0.0.0", port=8000, chat_manager=chat_manager)
+        start_sync_server(host="0.0.0.0", port=8000, chat_manager=chat_manager, causal_bank=bank)
     except Exception as e:
         logger.error(f"Falha fatal no Sync Server: {str(e)}")
     finally:
